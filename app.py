@@ -131,6 +131,57 @@ def show_day(date):
     except Exception as e:
         print(f"Error: {e}")
         return f"Ошибка при загрузке заданий для {date}", 500
+    
+
+@app.route('/add_task', methods=['GET', 'POST'])
+def add_task():
+    if 'user_id' not in session or session.get('role') != 'teacher':
+        return redirect(url_for('login'))
+    
+    if request.method == 'POST':
+        date = request.form['date']
+        subject = request.form['subject']
+        task_text = request.form['task_text']
+        
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+        cursor.execute('''
+            INSERT INTO assignments (date, subject, task_text, teacher_id)
+            VALUES (?, ?, ?, ?)
+        ''', (date, subject, task_text, session['user_id']))
+        conn.commit()
+        conn.close()
+        
+        return redirect(url_for('teacher_dashboard'))
+    
+    return render_template('add_task.html')
+
+@app.route('/view_tasks')
+def view_tasks():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
+    
+    if session.get('role') == 'teacher':
+        cursor.execute('''
+            SELECT * FROM assignments 
+            WHERE teacher_id = ?
+            ORDER BY date DESC
+        ''', (session['user_id'],))
+    else:
+        cursor.execute('''
+            SELECT a.*, u.username 
+            FROM assignments a
+            JOIN users u ON a.teacher_id = u.id
+            ORDER BY date DESC
+        ''')
+    
+    tasks = cursor.fetchall()
+    conn.close()
+    
+    return render_template('view_tasks.html', tasks=tasks)
 
 
 

@@ -106,26 +106,6 @@
 
         }
 
-        .calendar {
-        display: grid;
-        grid-template-columns: repeat(7, 1fr);
-        gap: 10px;
-        padding: 20px;
-        justify-items: center;
-        }
-        .calendar-day {
-            width: 100%;
-            padding: 10px;
-            text-align: center;
-            background-color: #e1bee7;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: bold;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        .calendar-day:hover {
-            background-color: #ce93d8;
-        }
     </style>
 </head>
 <body>
@@ -138,10 +118,19 @@
                   <span>Профиль</span>
                   <img class="imgUser" src="/userwhite.png" alt="Профиль">
                 </a>
-                <h1 class="headerText2">Выберите урок</h1>
-
             </header>
             <div class="main-content">
+                
+                <div class="user-role">
+                    {% if 'user_id' in session %}
+                        Вы вошли как: {{ session.role }} |
+                        {% if session.role == 'teacher' %}
+                            <a href="/add_task">Добавить задание</a> |
+                        {% endif %}
+                        <a href="/view_tasks">Просмотр заданий</a> |
+                        <a href="/logout">Выйти</a>
+                    {% endif %}
+                </div>
 
             </div>
         </div>
