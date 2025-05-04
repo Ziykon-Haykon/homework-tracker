@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Домашнее задание на {{ date }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        .wrapper {
+            display: flex;
+            height: 100vh;
+        }
+
+        .side {
+            flex: 2;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .left {
+            background-image: url('https://i.pinimg.com/736x/32/af/b1/32afb1e443357a4730850caecd4ac52d.jpg');
+        }
+
+        .right {
+            background-image: url('https://i.pinimg.com/originals/b7/b0/4a/b7b04ae24bb14784c91047e8f7ec24f2.png');
+        }
+
+        .content {
+            flex: 5;
+            background: white;
+            text-align: center;
+            padding: 1 ;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        header {
+            background-color: #6a1b9a;
+            color: white;
+            padding: 40px;
+            text-align: center;
+            position: relative;
+            border-radius: 0 0 20px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 6px 7px rgba(0, 0, 0, 0.6);
+        }
+
+        .headerText {
+            font-size: 32px;
+            color: #ffffff;
+            text-shadow: 3px 3px 5px rgba(0, 0, 0, 0.5);
+            font-size: 2em;      /* размер текста как у h1 */
+        font-weight: bold;   /* жирный текст */
+        text-decoration: none;
+        }
+
+        .imgUser {
+            position: absolute;
+            width: 80px;
+            border-radius: 50%;
+            transition: 0.3s;
+            left: -5px;
+            bottom: 10px;
+            
+        }
+
+        .imgUser:hover {
+            transform: scale(1.1);
+        }
+
+
+        .headerText2 {
+            position: absolute;
+            font-size: 24px;
+            text-shadow: 3px 3px 5px rgba(0, 0, 0, 0.5);
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .main-content {
+            padding: 20px;
+            max-height: 70vh; /* Ограничение по высоте */
+            overflow-y: auto; /* Включение вертикальной прокрутки */
+        }
+        .Profil{
+            position: absolute;
+            border-radius: 50%;
+            transition: 0.3s;
+            right:40px;
+            top: 90px;
+            color: #f4f4f4;
+            text-shadow: 3px 3px 5px rgba(0, 0, 0, 0.5);
+
+        }
+
+        .calendar {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 10px;
+        padding: 20px;
+        justify-items: center;
+        }
+        .calendar-day {
+            width: 100%;
+            padding: 10px;
+            text-align: center;
+            background-color: #e1bee7;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .calendar-day:hover {
+            background-color: #ce93d8;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="side left"></div>
+        <div class="content"> 
+            <header>
+                <a class="headerText" href="/index.html">HomeWork Tracker</a>
+                <a href="/user.html" class="Profil">
+                  <span>Профиль</span>
+                  <img class="imgUser" src="/userwhite.png" alt="Профиль">
+                </a>
+                <h1 class="headerText2">Выберите урок</h1>
+
+            </header>
+            <div class="main-content">
+
+
+                <h1>Домашнее задание на {{ date }}</h1>
+                {% if tasks %}
+                    <ul>
+                    {% for task in tasks %}
+                        <li><strong>{{ task.subject }}</strong>: {{ task.text }}</li>
+                    {% endfor %}
+                    </ul>
+                {% else %}
+                    <p>На этот день заданий нет.</p>
+                {% endif %}
+
+
+
+
+
+
+            </div>
+        </div>
+        <div class="side right"></div>
+    </div>
+
+
+</body>
+</html>

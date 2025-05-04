@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HomeWork Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        .wrapper {
+            display: flex;
+            height: 100vh;
+        }
+
+        .side {
+            flex: 2;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .left {
+            background-image: url('https://i.pinimg.com/736x/32/af/b1/32afb1e443357a4730850caecd4ac52d.jpg');
+        }
+
+        .right {
+            background-image: url('https://i.pinimg.com/originals/b7/b0/4a/b7b04ae24bb14784c91047e8f7ec24f2.png');
+        }
+
+        .content {
+            flex: 5;
+            background: white;
+            text-align: center;
+            padding: 1 ;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        header {
+            background-color: #6a1b9a;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+            border-radius: 0 0 20px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 6px 7px rgba(0, 0, 0, 0.6);
+        }
+
+        .headerText {
+            font-size: 32px;
+            color: #ffffff;
+            text-shadow: 3px 3px 5px rgba(0, 0, 0, 0.5);
+            font-size: 2em;      /* размер текста как у h1 */
+            font-weight: bold;   /* жирный текст */
+            text-decoration: none;
+        }
+
+        .imgUser {
+            width: 70px;
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+
+        .imgUser:hover {
+            transform: scale(1.1);
+        }
+
+        .main-content {
+            padding: 20px;
+        }
+
+        .button {
+            background: #6a1b9a;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.3s;
+            font-size: 16px;
+        }
+
+        .button:hover {
+            background: #9b30e2;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        .Profil{
+            position: absolute;
+            border-radius: 50%;
+            transition: 0.3s;
+            right:20px;
+            top: 90px;
+            color: #f4f4f4;
+            text-shadow: 3px 3px 5px rgba(0, 0, 0, 0.5);
+
+
+        }
+        .nice-button {
+      background-color: #6a1b9a;
+      color: white;
+      border: none;
+      padding: 12px 30px;
+      font-size: 18px;
+      font-weight: bold;
+      border-radius: 10px;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+      transition: background 0.3s, transform 0.2s;
+      position: absolute;
+      right: 430px;
+      bottom: 10px;
+    }
+
+    .nice-button:hover {
+      background-color: #9b30e2;
+      transform: translateY(-2px);
+    }
+
+    .nice-button:active {
+      transform: translateY(1px);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+    }
+    .profile-container {
+      max-width: 900px;
+      margin: 40px auto;
+      background-color: white;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .profile-header {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .profile-header img {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      object-fit: cover;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    }
+
+    .profile-info h2 {
+      margin: 0;
+      font-size: 24px;
+      color: #333;
+    }
+
+    .profile-info p {
+      margin: 5px 0;
+      color: #666;
+    }
+
+    .grades-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    .grades-table th,
+    .grades-table td {
+      border: 1px solid #ddd;
+      padding: 12px;
+      text-align: center;
+    }
+
+    .grades-table th {
+      background-color: #6a1b9a;
+      color: white;
+    }
+
+    .grades-table tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+
+    .grades-table tr:hover {
+      background-color: #f1f1f1;
+    }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="side left"></div>
+        <div class="content"> 
+            <header>
+                <a class="headerText" href="main\index.html">HomeWork Tracker</a>
+                <a href="user.html"><p class="Profil">Профиль</p><img class="imgUser" src="C:\Users\Ziykon\Desktop\Cursovaya\source\userwhite.png"></a>
+                
+
+            </header>
+            <div class="profile-container">
+                <div class="profile-header">
+                  <img src="https://i.pinimg.com/originals/b7/b0/4a/b7b04ae24bb14784c91047e8f7ec24f2.png" alt="User Avatar">
+                  <div class="profile-info">
+                    <h2>Егор чернышов
+                
+                    </h2>
+                    <p>Класс: 9А</p>
+                    <p>Электронная почта: ivanov@example.com</p>
+                  </div>
+                </div>
+            
+                <h3>Учет успеваемости</h3>
+                <table class="grades-table">
+                  <thead>
+                    <tr>
+                      <th>Предмет</th>
+                      <th>Средняя оценка</th>
+                     
+                      <th>Завершенные задания</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Математика</td>
+                      <td>4.5</td>
+                     
+                      <td>12 / 12</td>
+                    </tr>
+                    <tr>
+                      <td>Физика</td>
+                      <td>4.2</td>
+                      
+                      <td>10 / 11</td>
+                    </tr>
+                    <tr>
+                      <td>Английский</td>
+                      <td>5.0</td>
+                      
+                      <td>13 / 13</td>
+                    </tr>
+                    <tr>
+                      <td>Информатика</td>
+                      <td>4.8</td>
+                      
+                      <td>11 / 11</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            
+            <button class="nice-button" onclick="location.href='index.html'">⬅ На главную</button>  
+        </div>
+        <div class="side right"></div>
+    </div>
+</body>
+</html>

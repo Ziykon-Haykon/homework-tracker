@@ -1,0 +1,20 @@
+Структура папок
+Серийный номер тома: CA30-F666
+C:.
+|   database.db
+|   FYPSS.html
+|   package-lock.json
+|   package.json
+|   server.js
+|   structure.txt
+|   
++---main
+|       homeworkMath.html
+|       index.html
+|       MathWork1.html
+|       user.html
+|       userwhite.png
+|       
+\---node_modules
+
+            
