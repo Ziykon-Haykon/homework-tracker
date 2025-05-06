@@ -2,9 +2,28 @@ import json
 import sqlite3
 from flask import Flask, render_template, request, send_from_directory, redirect, session, url_for
 import os
+import datetime
+from werkzeug.utils import secure_filename
+
+
 
 app = Flask(__name__, static_folder='templates')
 app.secret_key = 'your_secret_key'  # обязательно для сессий
+
+UPLOAD_FOLDER = os.path.join('static', 'uploads')  # Папка для хранения файлов
+
+WEB_PATH_PREFIX = 'uploads'  # Для HTML-ссылки
+
+ALLOWED_EXTENSIONS = {'txt', 'pdf', 'jpg', 'png', 'jpeg', 'gif'}  # Разрешённые типы файлов
+
+# Создаём папку uploads, если её нет
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(UPLOAD_FOLDER, filename)
+
 
 # Обслуживаем статические файлы из папки 'main'
 @app.route('/<path:path>')
@@ -72,36 +91,44 @@ def logout():
 
 @app.route('/teacher')
 def teacher_dashboard():
-    return render_template('teacher_dashboard.html')  # Страница учителя
+    # Получаем текущую дату
+    current_date = datetime.datetime.now()
+    year = current_date.year
+    month = current_date.month
+
+    # Подключаемся к базе данных
+    conn = sqlite3.connect('database.db')
+    conn.row_factory = sqlite3.Row  # Настроим курсор для возвращения строк как словарей
+    cursor = conn.cursor()
+
+    # Получаем все даты с заданиями для текущего месяца
+    cursor.execute("SELECT DISTINCT date FROM assignments WHERE strftime('%Y-%m', date) = ?", (f"{year}-{month:02d}",))
+    assignment_dates = {row['date'] for row in cursor.fetchall()}  # Используем row['date'], потому что row — это словарь
+    conn.close()
+
+    # Передаём данные в шаблон
+    return render_template('teacher_dashboard.html', year=year, month=month, assignment_dates=assignment_dates)
+
+
 
 @app.route('/student')
 def student_dashboard():
-    return render_template('student_dashboard.html')  # Страница ученика
+    # Получаем текущую дату
+    current_date = datetime.datetime.now()
+    year = current_date.year
+    month = current_date.month
 
-@app.route('/date/<date>', methods=['GET'])
-def view_day_assignments(date):
-    conn = get_db_connection()
+    # Получаем все даты с заданиями для текущего месяца
+    conn = sqlite3.connect('database.db')
+    conn.row_factory = sqlite3.Row  # <-- вот это добавлено
     cursor = conn.cursor()
-    cursor.execute('SELECT * FROM assignments WHERE date = ?', (date,))
-    assignments = cursor.fetchall()
+    cursor.execute("SELECT DISTINCT date FROM assignments WHERE strftime('%Y-%m', date) = ?", (f"{year}-{month:02d}",))
+    assignment_dates = {row['date'] for row in cursor.fetchall()}
     conn.close()
-    return render_template('day_assignments.html', assignments=assignments, date=date)
 
-@app.route('/add_assignment', methods=['POST'])
-def add_assignment():
-    if request.method == 'POST':
-        date = request.form['date']
-        subject = request.form['subject']
-        assignment_text = request.form['assignment_text']
-        created_by = session.get('user_id')  # Учитель, который добавляет задание
-        
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute('INSERT INTO assignments (date, subject, assignment_text, created_by) VALUES (?, ?, ?, ?)', 
-                       (date, subject, assignment_text, created_by))
-        conn.commit()
-        conn.close()
-        return redirect(f'/date/{date}')  # Перенаправление на страницу с заданиями на этот день
+    return render_template('student_dashboard.html', year=year, month=month, assignment_dates=assignment_dates)
+
+
 
 @app.before_request
 def check_role():
@@ -111,77 +138,124 @@ def check_role():
         return
     if 'role' not in session:
         return redirect(url_for('index'))
-    
-# Загрузка всех заданий
-def load_homework():
-    with open('homework.json', 'r', encoding='utf-8') as f:
-        return json.load(f)
 
 @app.route('/')
 def calendar_view():
     return render_template('calendar.html')
 
-@app.route('/day/<date>', methods=['GET'])
-def show_day(date):
-    try:
-        # Предположим, homework.json содержит задания на каждый день в формате { "YYYY-MM-DD": [...] }
-        homework_data = load_homework()  # Загружаем все задания
-        tasks = homework_data.get(date, [])  # Получаем задания на выбранную дату или пустой список
-        return render_template('day_assignments.html', date=date, tasks=tasks)
-    except Exception as e:
-        print(f"Error: {e}")
-        return f"Ошибка при загрузке заданий для {date}", 500
-    
+@app.route('/day/<date>', methods=['GET', 'POST'])
+def day_view(date):
+    conn = sqlite3.connect('database.db')
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
 
-@app.route('/add_task', methods=['GET', 'POST'])
-def add_task():
-    if 'user_id' not in session or session.get('role') != 'teacher':
-        return redirect(url_for('login'))
-    
-    if request.method == 'POST':
-        date = request.form['date']
-        subject = request.form['subject']
-        task_text = request.form['task_text']
-        
-        conn = sqlite3.connect('database.db')
-        cursor = conn.cursor()
-        cursor.execute('''
-            INSERT INTO assignments (date, subject, task_text, teacher_id)
-            VALUES (?, ?, ?, ?)
-        ''', (date, subject, task_text, session['user_id']))
+    # Если учитель отправил форму
+    if request.method == 'POST' and session.get('role') == 'teacher':
+        content = request.form['content']
+        cursor.execute('INSERT INTO assignments (date, content) VALUES (?, ?)', (date, content))
         conn.commit()
-        conn.close()
-        
-        return redirect(url_for('teacher_dashboard'))
-    
-    return render_template('add_task.html')
 
-@app.route('/view_tasks')
-def view_tasks():
-    if 'user_id' not in session:
-        return redirect(url_for('login'))
-    
+    # Получаем все задания на этот день
+    cursor.execute('SELECT * FROM assignments WHERE date = ?', (date,))
+    assignments = cursor.fetchall()
+    conn.close()
+
+    return render_template('day_assignments.html', date=date, assignments=assignments, role=session.get('role'))
+
+
+@app.route('/delete_assignment/<int:assignment_id>/<date>', methods=['POST'])
+def delete_assignment(assignment_id, date):
+    if session.get('role') != 'teacher':
+        return "⛔ Нет доступа", 403
+
     conn = sqlite3.connect('database.db')
     cursor = conn.cursor()
-    
-    if session.get('role') == 'teacher':
-        cursor.execute('''
-            SELECT * FROM assignments 
-            WHERE teacher_id = ?
-            ORDER BY date DESC
-        ''', (session['user_id'],))
-    else:
-        cursor.execute('''
-            SELECT a.*, u.username 
-            FROM assignments a
-            JOIN users u ON a.teacher_id = u.id
-            ORDER BY date DESC
-        ''')
-    
-    tasks = cursor.fetchall()
+    cursor.execute('DELETE FROM assignments WHERE id = ?', (assignment_id,))
+    conn.commit()
     conn.close()
-    
-    return render_template('view_tasks.html', tasks=tasks)
+    return redirect(url_for('day_view', date=date))
+
+@app.route('/edit_assignment/<int:assignment_id>', methods=['GET', 'POST'])
+def edit_assignment(assignment_id):
+    if session.get('role') != 'teacher':
+        return "⛔ Нет доступа", 403
+
+    conn = sqlite3.connect('database.db')
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+
+    if request.method == 'POST':
+        new_content = request.form['content']
+        cursor.execute('UPDATE assignments SET content = ? WHERE id = ?', (new_content, assignment_id))
+        conn.commit()
+        cursor.execute('SELECT date FROM assignments WHERE id = ?', (assignment_id,))
+        date = cursor.fetchone()['date']
+        conn.close()
+        return redirect(url_for('day_view', date=date))
+
+    cursor.execute('SELECT * FROM assignments WHERE id = ?', (assignment_id,))
+    assignment = cursor.fetchone()
+    conn.close()
+
+    return render_template('edit_assignment.html', assignment=assignment)
+
+@app.route('/calendar', methods=['GET'])
+def calendar():
+    # Получаем текущий месяц
+    current_date = datetime.datetime.now()
+    year = current_date.year
+    month = current_date.month
+
+    # Получаем все даты, для которых есть задания
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT DISTINCT date FROM assignments WHERE strftime('%Y-%m', date) = ?", (f"{year}-{month:02d}",))
+    assignment_dates = {row['date'] for row in cursor.fetchall()}
+    conn.close()
+
+    return render_template('calendar.html', year=year, month=month, assignment_dates=assignment_dates)
+
+
+# Проверка расширения файла
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@app.route('/day/<date>', methods=['GET', 'POST'])
+def day_assignments(date):
+    conn = sqlite3.connect('database.db')
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+
+    if request.method == 'POST':
+        content = request.form['content']
+        file = request.files.get('assignment_file')
+
+        # Изначально установим file_path как None
+        file_path = None
+
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            file_path_on_disk = os.path.join(UPLOAD_FOLDER, filename)
+            file.save(file_path_on_disk)
+
+            # Устанавливаем file_path только если файл был успешно загружен
+            file_path = os.path.join(WEB_PATH_PREFIX, filename)
+
+        # Записываем задание в базу данных с file_path (может быть None)
+        cursor.execute(''' 
+            INSERT INTO assignments (date, content, file_path) 
+            VALUES (?, ?, ?)
+        ''', (date, content, file_path))
+        conn.commit()
+
+        return redirect(url_for('day_assignments', date=date))
+
+    cursor.execute('SELECT * FROM assignments WHERE date = ?', (date,))
+    assignments = cursor.fetchall()
+
+    conn.close()
+
+    return render_template('day_assignments.html', assignments=assignments, date=date)
 
 
 

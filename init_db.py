@@ -18,17 +18,38 @@ CREATE TABLE users (
 )
 ''')
 
-# Создаем таблицу заданий (унифицированная версия)
+
 cursor.execute('''
-CREATE TABLE assignments (
+CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    date TEXT NOT NULL,  -- Формат: YYYY-MM-DD
-    subject TEXT NOT NULL,
-    task_text TEXT NOT NULL,
-    teacher_id INTEGER NOT NULL,
-    FOREIGN KEY (teacher_id) REFERENCES users(id)
+    username TEXT NOT NULL,
+    password TEXT NOT NULL,
+    role TEXT NOT NULL  -- "student" или "teacher"
 )
 ''')
+
+cursor.execute('''
+CREATE TABLE IF NOT EXISTS assignments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    date TEXT NOT NULL,
+    content TEXT NOT NULL
+)
+''')
+
+# Добавляем новый столбец, если его ещё нет
+cursor.execute('''
+ALTER TABLE assignments ADD COLUMN file_path TEXT;
+''')
+
+
+
+# Проверяем, существует ли столбец file_path
+cursor.execute("PRAGMA table_info(assignments);")
+columns = [column[1] for column in cursor.fetchall()]
+if 'file_path' not in columns:
+    cursor.execute('''
+    ALTER TABLE assignments ADD COLUMN file_path TEXT;
+    ''')
 
 # Добавляем тестовых пользователей
 try:

@@ -121,16 +121,6 @@
             </header>
             <div class="main-content">
                 
-                <div class="user-role">
-                    {% if 'user_id' in session %}
-                        Вы вошли как: {{ session.role }} |
-                        {% if session.role == 'teacher' %}
-                            <a href="/add_task">Добавить задание</a> |
-                        {% endif %}
-                        <a href="/view_tasks">Просмотр заданий</a> |
-                        <a href="/logout">Выйти</a>
-                    {% endif %}
-                </div>
 
             </div>
         </div>
