@@ -10,19 +10,18 @@ from werkzeug.utils import secure_filename
 app = Flask(__name__, static_folder='templates')
 app.secret_key = 'your_secret_key'  # обязательно для сессий
 
-UPLOAD_FOLDER = os.path.join('static', 'uploads')  # Папка для хранения файлов
+# 🔧 Настройки загрузки
+UPLOAD_FOLDER = os.path.join('static', 'uploads')
+ALLOWED_EXTENSIONS = {'txt', 'pdf', 'jpg', 'jpeg', 'png', 'gif'}
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-WEB_PATH_PREFIX = 'uploads'  # Для HTML-ссылки
-
-ALLOWED_EXTENSIONS = {'txt', 'pdf', 'jpg', 'png', 'jpeg', 'gif'}  # Разрешённые типы файлов
-
-# Создаём папку uploads, если её нет
+# 🧱 Убедиться, что папка существует
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
-@app.route('/uploads/<filename>')
-def uploaded_file(filename):
-    return send_from_directory(UPLOAD_FOLDER, filename)
+# ✅ Проверка разрешений
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 # Обслуживаем статические файлы из папки 'main'
@@ -216,10 +215,9 @@ def calendar():
     return render_template('calendar.html', year=year, month=month, assignment_dates=assignment_dates)
 
 
-# Проверка расширения файла
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+
+# 📥 Загрузка файлов и создание задания
 @app.route('/day/<date>', methods=['GET', 'POST'])
 def day_assignments(date):
     conn = sqlite3.connect('database.db')
@@ -230,32 +228,32 @@ def day_assignments(date):
         content = request.form['content']
         file = request.files.get('assignment_file')
 
-        # Изначально установим file_path как None
         file_path = None
-
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
-            file_path_on_disk = os.path.join(UPLOAD_FOLDER, filename)
-            file.save(file_path_on_disk)
+            full_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(full_path)
+            file_path = filename  # сохраняем только имя файла
 
-            # Устанавливаем file_path только если файл был успешно загружен
-            file_path = os.path.join(WEB_PATH_PREFIX, filename)
-
-        # Записываем задание в базу данных с file_path (может быть None)
-        cursor.execute(''' 
-            INSERT INTO assignments (date, content, file_path) 
+        cursor.execute('''
+            INSERT INTO assignments (date, content, file_path)
             VALUES (?, ?, ?)
         ''', (date, content, file_path))
         conn.commit()
 
         return redirect(url_for('day_assignments', date=date))
 
+    # Получение списка заданий
     cursor.execute('SELECT * FROM assignments WHERE date = ?', (date,))
     assignments = cursor.fetchall()
-
     conn.close()
 
     return render_template('day_assignments.html', assignments=assignments, date=date)
+
+# 📤 Отдача файла для скачивания
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 
 

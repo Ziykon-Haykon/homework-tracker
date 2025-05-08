@@ -248,7 +248,8 @@
                 
                                 {% if a['file_path'] %}
                                     <!-- Исправленная ссылка для скачивания файла -->
-                                    <p>📎 <a href="{{ url_for('uploaded_file', filename=a['file_path'].split('/')[-1]) }}" download>Скачать файл</a></p>
+                                    <p>📎 <a href="{{ url_for('uploaded_file', filename=a['file_path']) }}" download>Скачать файл</a></p>
+
                                 {% endif %}
                 
                                 {% if role == 'teacher' %}
