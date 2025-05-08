@@ -11,15 +11,21 @@ app = Flask(__name__, static_folder='templates')
 app.secret_key = 'your_secret_key'  # обязательно для сессий
 
 # 🔧 Настройки загрузки
-UPLOAD_FOLDER = os.path.join('static', 'uploads')
-ALLOWED_EXTENSIONS = {'txt', 'pdf', 'jpg', 'jpeg', 'png', 'gif'}
+UPLOAD_FOLDER = os.path.join(app.root_path, 'static', 'uploads')
+ALLOWED_EXTENSIONS = {'txt', 'pdf', 'jpg', 'png', 'jpeg', 'gif'}
+
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-# 🧱 Убедиться, что папка существует
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
+# 🧱 Убедиться, что папка существует
+if not os.path.exists(UPLOAD_FOLDER):
+  os.makedirs(UPLOAD_FOLDER)
+
+
 # ✅ Проверка разрешений
+
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -218,40 +224,35 @@ def calendar():
 
 
 
-
-# 📥 Загрузка файлов и создание задания
 @app.route('/day/<date>', methods=['GET', 'POST'])
 def day_assignments(date):
-    conn = sqlite3.connect('database.db')
-    conn.row_factory = sqlite3.Row
-    cursor = conn.cursor()
-
     if request.method == 'POST':
-        print("POST получен")  # <--- Должно появиться
         content = request.form['content']
         file = request.files.get('assignment_file')
 
-        print("Файл:", file)  # <--- Проверка
+        file_path = None
 
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             file_path_on_disk = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            print(f"Saving file to: {file_path_on_disk}")  # <-- вот оно
             file.save(file_path_on_disk)
+            print(f"File saved to: {file_path_on_disk}")
+            file_path = os.path.join('uploads', filename)
 
-            file_path = filename
+        # Сохранение задания в базу данных
+        # ...
 
-        cursor.execute(
-            'INSERT INTO assignments (date, content, file_path) VALUES (?, ?, ?)',
-            (date, content, file_path)
-        )
-        conn.commit()
         return redirect(url_for('day_assignments', date=date))
 
-# 📤 Отдача файла для скачивания
+    # Получение заданий из базы данных
+    # ...
+
+    return render_template('day_assignments.html', assignments=assignments, date=date)
+
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename, as_attachment=True)
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
 
 
 if __name__ == '__main__':
