@@ -20,8 +20,10 @@ if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
 # ✅ Проверка разрешений
+
 def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 # Обслуживаем статические файлы из папки 'main'
@@ -225,38 +227,35 @@ def day_assignments(date):
     cursor = conn.cursor()
 
     if request.method == 'POST':
+        print("POST получен")  # <--- Должно появиться
         content = request.form['content']
         file = request.files.get('assignment_file')
 
-        file_path = None
+        print("Файл:", file)  # <--- Проверка
+
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
-            full_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            file.save(full_path)
-            file_path = filename  # сохраняем только имя файла
+            file_path_on_disk = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            print(f"Saving file to: {file_path_on_disk}")  # <-- вот оно
+            file.save(file_path_on_disk)
 
-        cursor.execute('''
-            INSERT INTO assignments (date, content, file_path)
-            VALUES (?, ?, ?)
-        ''', (date, content, file_path))
+            file_path = filename
+
+        cursor.execute(
+            'INSERT INTO assignments (date, content, file_path) VALUES (?, ?, ?)',
+            (date, content, file_path)
+        )
         conn.commit()
-
         return redirect(url_for('day_assignments', date=date))
-
-    # Получение списка заданий
-    cursor.execute('SELECT * FROM assignments WHERE date = ?', (date,))
-    assignments = cursor.fetchall()
-    conn.close()
-
-    return render_template('day_assignments.html', assignments=assignments, date=date)
 
 # 📤 Отдача файла для скачивания
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
-
-
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename, as_attachment=True)
 
 
 if __name__ == '__main__':
+    
+    
+
     app.run(debug=True, host='0.0.0.0', port=3000)
