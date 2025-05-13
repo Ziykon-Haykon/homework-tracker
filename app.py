@@ -1,6 +1,6 @@
 import json
 import sqlite3
-from flask import Flask, render_template, request, send_from_directory, redirect, session, url_for
+from flask import Flask, render_template, request, send_from_directory, redirect, session, url_for, flash, make_response
 import os
 import datetime
 from werkzeug.utils import secure_filename
@@ -48,10 +48,8 @@ def get_db_connection():
     return conn
 
 # Маршрут для входа
-@app.route('/login', methods=['GET', 'POST'])
+@app.route('/login', methods=['POST'])
 def login():
-    if request.method == 'GET':
-        return render_template('login.html')
     username = request.form['username']
     password = request.form['password']
 
@@ -65,29 +63,69 @@ def login():
     if user:
         session['user_id'] = user['id']
         session['role'] = user['role']
+
+        # Логирование сессии
+        print(f"Сессия: {session['user_id']}")  # Логируем ID пользователя из сессии
+
         if user['role'] == 'teacher':
-            return redirect(url_for('teacher_dashboard'))  # Переход на страницу учителя
+            return redirect(url_for('teacher_dashboard'))
         else:
-            return redirect(url_for('student_dashboard'))  # Переход на страницу ученика
+            return redirect(url_for('student_dashboard'))
     else:
         return '❌ Неверный логин или пароль'
 
-# Маршрут для регистрации
+
+
+
+
+@app.route('/protected')
+def protected():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))  # Если пользователь не авторизован, перенаправляем на страницу входа
+    return 'Здесь защищенная страница для авторизованных пользователей'
+
+
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
         role = request.form['role']
+        email = request.form['email']  # Не забудь поле для email
+        teacher_code = request.form.get('teacher_code', '')
+
+        TEACHER_SECRET = 'teach2024'
+
+        if role == 'teacher' and teacher_code != TEACHER_SECRET:
+            flash("Неверный код учителя!", "danger")
+            return redirect('/register')
 
         conn = sqlite3.connect('database.db')
         cursor = conn.cursor()
 
-        cursor.execute('INSERT INTO users (username, password, role) VALUES (?, ?, ?)', (username, password, role))
-        conn.commit()
+        try:
+            # Добавляем email и другие поля в запрос
+            cursor.execute('''INSERT INTO users (username, password, role, email) 
+                              VALUES (?, ?, ?, ?)''', (username, password, role, email))
+            conn.commit()
+            flash("Успешная регистрация!", "success")
+            print(f"Пользователь {username} зарегистрирован в базе данных!")  # Логируем успешную регистрацию
+            return redirect('/login')
+        except sqlite3.IntegrityError:
+            flash("Имя пользователя уже занято", "danger")
+            print(f"Ошибка: Имя пользователя {username} уже занято!")
+            return redirect('/register')
+        except Exception as e:
+            flash(f"Ошибка при регистрации: {str(e)}", "danger")
+            print(f"Ошибка: {str(e)}")  # Логируем ошибку
+            return redirect('/register')
+        finally:
+            conn.close()
 
-        return redirect('/login')  # Перенаправить на страницу входа после успешной регистрации
-    return render_template('register.html')  # Страница регистрации
+    return render_template('register.html')
+
+
+
 
 # Маршрут для выхода
 @app.route('/logout')
@@ -152,22 +190,44 @@ def calendar_view():
 
 @app.route('/day/<date>', methods=['GET', 'POST'])
 def day_view(date):
-    conn = sqlite3.connect('database.db')
-    conn.row_factory = sqlite3.Row
-    cursor = conn.cursor()
+    role = session.get('role')
+    if not role:
+        return redirect(url_for('login'))
 
-    # Если учитель отправил форму
-    if request.method == 'POST' and session.get('role') == 'teacher':
-        content = request.form['content']
-        cursor.execute('INSERT INTO assignments (date, content) VALUES (?, ?)', (date, content))
-        conn.commit()
+    db = get_db_connection()
 
-    # Получаем все задания на этот день
-    cursor.execute('SELECT * FROM assignments WHERE date = ?', (date,))
-    assignments = cursor.fetchall()
-    conn.close()
+    if request.method == 'POST':
+        if role == 'teacher':
+            content = request.form.get('content')
+            file = request.files.get('file')
+            file_path = None
+            if file and file.filename:
+                filename = secure_filename(file.filename)
+                file_path = filename  # сохраняем только имя файла, не полный путь
+                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 
-    return render_template('day_assignments.html', date=date, assignments=assignments, role=session.get('role'))
+            db.execute('INSERT INTO assignments (date, content, file_path) VALUES (?, ?, ?)', (date, content, file_path))
+            db.commit()
+            return redirect(url_for('day_view', date=date))
+
+        elif role == 'student':
+            comment = request.form.get('content')
+            student_file = request.files.get('student_file')
+            file_path = None
+            if student_file and student_file.filename:
+                filename = secure_filename(student_file.filename)
+                file_path = filename  # сохраняем только имя файла, не полный путь
+                student_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+
+            db.execute('INSERT INTO submissions (student_id, date, comment, file_path) VALUES (?, ?, ?, ?)', 
+                       (session['user_id'], date, comment, file_path))
+            db.commit()
+            return redirect(url_for('day_view', date=date))
+
+    assignments = db.execute('SELECT * FROM assignments WHERE date = ?', (date,)).fetchall()
+    return render_template('day_assignments.html', date=date, assignments=assignments, role=role)
+
+
 
 
 @app.route('/delete_assignment/<int:assignment_id>/<date>', methods=['POST'])
@@ -224,30 +284,51 @@ def calendar():
 
 
 
-@app.route('/day/<date>', methods=['GET', 'POST'])
-def day_assignments(date):
-    if request.method == 'POST':
-        content = request.form['content']
-        file = request.files.get('assignment_file')
 
-        file_path = None
+@app.route('/profile')
+def profile():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))  # Защита: если не авторизован
 
-        if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            file_path_on_disk = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            file.save(file_path_on_disk)
-            print(f"File saved to: {file_path_on_disk}")
-            file_path = os.path.join('uploads', filename)
+    user_id = session['user_id']
 
-        # Сохранение задания в базу данных
-        # ...
+    conn = sqlite3.connect('database.db')
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
 
-        return redirect(url_for('day_assignments', date=date))
+    # Получаем данные пользователя
+    cursor.execute('SELECT username AS full_name, role, email, class_name FROM users WHERE id = ?', (user_id,))
+    user = cursor.fetchone()
+    print(f"Пользователь: {user}")  # Логируем, что мы получили из базы данных
 
-    # Получение заданий из базы данных
-    # ...
+    # Получаем оценки и задания
+    cursor.execute('''
+        SELECT subject, AVG(grade) as average_grade,
+               COUNT(*) as total,
+               SUM(CASE WHEN status = 'done' THEN 1 ELSE 0 END) as completed
+        FROM grades
+        WHERE student_id = ?
+        GROUP BY subject
+    ''', (user_id,))
+    grades = cursor.fetchall()
+    print(f"Оценки: {grades}")  # Логируем, что мы получили из базы данных
 
-    return render_template('day_assignments.html', assignments=assignments, date=date)
+    conn.close()
+
+    # Отключаем кеширование для страницы
+    response = make_response(render_template('user.html', user=user, grades=grades))
+    response.cache_control.no_cache = True
+    response.cache_control.no_store = True
+    response.cache_control.must_revalidate = True
+
+    return response
+
+
+
+
+
+
+
 
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):

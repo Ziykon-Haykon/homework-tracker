@@ -109,9 +109,12 @@
         </div>
         <div id="calendar" class="calendar">
             {% for day in range(1, 32) %}
-                <div class="calendar-day {% if (year ~ '-' ~ '{:02d}'.format(month) ~ '-' ~ '{:02d}'.format(day)) in assignment_dates %}has-assignment{% endif %}">
-                    {{ day }}
-                </div>
+                {% set day_str = '{:04d}-{:02d}-{:02d}'.format(year, month, day) %}
+                <a href="{{ url_for('day_view', date=day_str) }}">
+                    <div class="calendar-day {% if day_str in assignment_dates %}has-assignment{% endif %}">
+                        {{ day }}
+                    </div>
+                </a>
             {% endfor %}
         </div>
     </div>

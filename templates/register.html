@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+<h2>Регистрация</h2>
+<form action="/register" method="POST">
+    <label for="username">Имя пользователя</label>
+    <input type="text" name="username" required><br>
+
+    <label for="password">Пароль</label>
+    <input type="password" name="password" required><br>
+
+    <label for="role">Роль</label>
+    <select name="role" required>
+        <option value="student">Студент</option>
+        <option value="teacher">Учитель</option>
+    </select><br>
+
+    <label for="email">Электронная почта</label>
+    <input type="email" name="email" required><br>
+
+    <label for="teacher_code">Код учителя (если роль учитель)</label>
+    <input type="text" name="teacher_code"><br>
+
+    <button type="submit">Зарегистрироваться</button>
+</form>
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <ul>
+      {% for category, message in messages %}
+        <li class="{{ category }}">{{ message }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+{% endwith %}
+
+
+<script>
+function toggleCodeField() {
+    const role = document.getElementById('role').value;
+    const codeDiv = document.getElementById('teacher-code');
+    codeDiv.style.display = (role === 'teacher') ? 'block' : 'none';
+}
+</script>
+
+</body>
+</html>

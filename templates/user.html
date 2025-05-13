@@ -207,63 +207,29 @@
             <header>
                 <a class="headerText" href="main\index.html">HomeWork Tracker</a>
                 <a href="user.html"><p class="Profil">Профиль</p><img class="imgUser" src="C:\Users\Ziykon\Desktop\Cursovaya\source\userwhite.png"></a>
-                
-
             </header>
-            <div class="profile-container">
-                <div class="profile-header">
-                  <img src="https://i.pinimg.com/originals/b7/b0/4a/b7b04ae24bb14784c91047e8f7ec24f2.png" alt="User Avatar">
-                  <div class="profile-info">
-                    <h2>Егор чернышов
-                
-                    </h2>
-                    <p>Класс: 9А</p>
-                    <p>Электронная почта: ivanov@example.com</p>
-                  </div>
-                </div>
-            
-                <h3>Учет успеваемости</h3>
-                <table class="grades-table">
-                  <thead>
-                    <tr>
-                      <th>Предмет</th>
-                      <th>Средняя оценка</th>
-                     
-                      <th>Завершенные задания</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>Математика</td>
-                      <td>4.5</td>
-                     
-                      <td>12 / 12</td>
-                    </tr>
-                    <tr>
-                      <td>Физика</td>
-                      <td>4.2</td>
-                      
-                      <td>10 / 11</td>
-                    </tr>
-                    <tr>
-                      <td>Английский</td>
-                      <td>5.0</td>
-                      
-                      <td>13 / 13</td>
-                    </tr>
-                    <tr>
-                      <td>Информатика</td>
-                      <td>4.8</td>
-                      
-                      <td>11 / 11</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            
-            <button class="nice-button" onclick="location.href='index.html'">⬅ На главную</button>  
-        </div>
+
+
+    <h1>Профиль</h1>
+    <p>Имя пользователя: {{ user.username }}</p>
+    <p>Роль: {{ user.role }}</p>
+    <p>Электронная почта: {{ user.email }}</p>
+    <p>Класс: {{ user.class_name }}</p>
+
+    <h2>Учет успеваемости</h2>
+    {% for grade in grades %}
+        <p>
+            Предмет: {{ grade['subject'] }}<br>
+            Средняя оценка: {{ "%.1f"|format(grade['average_grade'] or 0.0) }}<br>
+            Завершено: {{ grade['completed'] }}<br>
+            Всего заданий: {{ grade['total'] }}<br>
+        </p>
+    {% else %}
+        <p>Нет данных для отображения.</p>  <!-- Это поможет проверить, пуст ли результат -->
+    {% endfor %}
+            </div>
+
         <div class="side right"></div>
-    </div>
+     </div>
 </body>
 </html>
