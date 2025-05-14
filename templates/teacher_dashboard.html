@@ -1,17 +1,19 @@
 <!-- teacher_dashboard.html -->
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Панель учителя</title>
     <style>
-                body {
+        body {
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
             background-color: #f4f4f4;
         }
+
         * {
             margin: 0;
             padding: 0;
@@ -41,7 +43,7 @@
             flex: 5;
             background: white;
             text-align: center;
-            padding: 1 ;
+            padding: 1;
             border-radius: 15px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         }
@@ -63,9 +65,11 @@
             font-size: 32px;
             color: #ffffff;
             text-shadow: 3px 3px 5px rgba(0, 0, 0, 0.5);
-            font-size: 2em;      /* размер текста как у h1 */
-        font-weight: bold;   /* жирный текст */
-        text-decoration: none;
+            font-size: 2em;
+            /* размер текста как у h1 */
+            font-weight: bold;
+            /* жирный текст */
+            text-decoration: none;
         }
 
         .imgUser {
@@ -75,7 +79,7 @@
             transition: 0.3s;
             left: -5px;
             bottom: 10px;
-            
+
         }
 
         .imgUser:hover {
@@ -93,14 +97,17 @@
 
         .main-content {
             padding: 20px;
-            max-height: 70vh; /* Ограничение по высоте */
-            overflow-y: auto; /* Включение вертикальной прокрутки */
+            max-height: 70vh;
+            /* Ограничение по высоте */
+            overflow-y: auto;
+            /* Включение вертикальной прокрутки */
         }
-        .Profil{
+
+        .Profil {
             position: absolute;
             border-radius: 50%;
             transition: 0.3s;
-            right:40px;
+            right: 40px;
             top: 90px;
             color: #f4f4f4;
             text-shadow: 3px 3px 5px rgba(0, 0, 0, 0.5);
@@ -112,28 +119,32 @@
         }
     </style>
 </head>
+
 <body>
     <div class="wrapper">
         <div class="side left"></div>
-        <div class="content"> 
+        <div class="content">
             <header>
-                <a class="headerText" href="/index.html">HomeWork Tracker</a>
-                <a href="/user.html" class="Profil">
-                  <span>Профиль</span>
-                  <img class="imgUser" src="/userwhite.png" alt="Профиль">
-                </a>
-                <h2>Добро пожаловать, учитель!</h2>
-                <h2>Выберите дату для добавления задания </h2>
+                <div>
+                    <a class="headerText" href="/index.html">HomeWork Tracker</a>
+                    <h2>Добро пожаловать, учитель!</h2>
+                </div>
 
+                <a href="/user.html" class="Profil">
+                    <div class="pfb">
+                        <img class="imgUser" src="/userwhite.png" alt="Профиль">
+                        <span>Профиль</span>
+                    </div>
+                </a>
             </header>
             <div class="main-content">
-                
 
-                
-            
+
+
+
                 <!-- Вставляем календарь -->
                 {% include 'calendar.html' %}
-            
+
                 <br>
                 <a href="{{ url_for('logout') }}" class="OutButton">Выйти</a>
             </div>
@@ -142,4 +153,5 @@
     </div>
 
 </body>
+
 </html>
