@@ -190,42 +190,62 @@ def calendar_view():
 
 @app.route('/day/<date>', methods=['GET', 'POST'])
 def day_view(date):
-    role = session.get('role')
-    if not role:
+    if 'user_id' not in session:
         return redirect(url_for('login'))
 
-    db = get_db_connection()
+    role = session.get('role')
+
+    conn = sqlite3.connect('database.db', check_same_thread=False)
+    conn.row_factory = sqlite3.Row
+    db = conn.cursor()
 
     if request.method == 'POST':
         if role == 'teacher':
             content = request.form.get('content')
             file = request.files.get('file')
             file_path = None
+
             if file and file.filename:
                 filename = secure_filename(file.filename)
-                file_path = filename  # сохраняем только имя файла, не полный путь
+                file_path = filename
                 file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 
-            db.execute('INSERT INTO assignments (date, content, file_path) VALUES (?, ?, ?)', (date, content, file_path))
-            db.commit()
+            # ✅ Добавим заглушку для title (если поле обязательно)
+            title = request.form.get('title') or "Без названия"
+
+            db.execute(
+                'INSERT INTO assignments (title, date, content, file_path) VALUES (?, ?, ?, ?)',
+                (title, date, content, file_path)
+            )
+            conn.commit()
+            conn.close()
             return redirect(url_for('day_view', date=date))
 
         elif role == 'student':
             comment = request.form.get('content')
             student_file = request.files.get('student_file')
             file_path = None
+
             if student_file and student_file.filename:
                 filename = secure_filename(student_file.filename)
-                file_path = filename  # сохраняем только имя файла, не полный путь
+                file_path = filename
                 student_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 
-            db.execute('INSERT INTO submissions (student_id, date, comment, file_path) VALUES (?, ?, ?, ?)', 
-                       (session['user_id'], date, comment, file_path))
-            db.commit()
+            db.execute(
+                'INSERT INTO submissions (student_id, date, comment, file_path) VALUES (?, ?, ?, ?)',
+                (session['user_id'], date, comment, file_path)
+            )
+            conn.commit()
+            conn.close()
             return redirect(url_for('day_view', date=date))
 
-    assignments = db.execute('SELECT * FROM assignments WHERE date = ?', (date,)).fetchall()
+    # 👇 Чтение заданий (GET-запрос)
+    db.execute('SELECT * FROM assignments WHERE date = ?', (date,))
+    assignments = db.fetchall()
+
+    conn.close()
     return render_template('day_assignments.html', date=date, assignments=assignments, role=role)
+
 
 
 
@@ -244,27 +264,22 @@ def delete_assignment(assignment_id, date):
 
 @app.route('/edit_assignment/<int:assignment_id>', methods=['GET', 'POST'])
 def edit_assignment(assignment_id):
-    if session.get('role') != 'teacher':
-        return "⛔ Нет доступа", 403
-
     conn = sqlite3.connect('database.db')
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
     if request.method == 'POST':
-        new_content = request.form['content']
+        new_content = request.form.get('content')
         cursor.execute('UPDATE assignments SET content = ? WHERE id = ?', (new_content, assignment_id))
         conn.commit()
-        cursor.execute('SELECT date FROM assignments WHERE id = ?', (assignment_id,))
-        date = cursor.fetchone()['date']
         conn.close()
-        return redirect(url_for('day_view', date=date))
+        return redirect(url_for('day_view', date=request.args.get('date')))  # если передавал дату
 
     cursor.execute('SELECT * FROM assignments WHERE id = ?', (assignment_id,))
     assignment = cursor.fetchone()
     conn.close()
-
     return render_template('edit_assignment.html', assignment=assignment)
+
 
 @app.route('/calendar', methods=['GET'])
 def calendar():
@@ -285,7 +300,7 @@ def calendar():
 
 
 
-@app.route('/profile')
+@app.route('/user.html') 
 def profile():
     if 'user_id' not in session:
         return redirect(url_for('login'))  # Защита: если не авторизован
@@ -297,7 +312,8 @@ def profile():
     cursor = conn.cursor()
 
     # Получаем данные пользователя
-    cursor.execute('SELECT username AS full_name, role, email, class_name FROM users WHERE id = ?', (user_id,))
+    cursor.execute('SELECT username, role, email, class_name FROM users WHERE id = ?', (user_id,))
+
     user = cursor.fetchone()
     print(f"Пользователь: {user}")  # Логируем, что мы получили из базы данных
 
@@ -324,6 +340,35 @@ def profile():
     return response
 
 
+@app.route('/grade_assignment/<int:assignment_id>/<int:student_id>', methods=['POST'])
+def grade_assignment(assignment_id, student_id):
+    grade = request.form.get('grade')
+    status = request.form.get('status')
+    
+    conn = get_db_connection()
+    # Проверка, существует ли запись в таблице grades
+    existing_grade = conn.execute(
+        'SELECT * FROM grades WHERE student_id = ? AND assignment_id = ?',
+        (student_id, assignment_id)
+    ).fetchone()
+    
+    if existing_grade:
+        # Если запись существует, обновляем оценку
+        conn.execute(
+            'UPDATE grades SET grade = ?, status = ? WHERE student_id = ? AND assignment_id = ?',
+            (grade, status, student_id, assignment_id)
+        )
+    else:
+        # Если записи нет, создаем новую
+        conn.execute(
+            'INSERT INTO grades (student_id, assignment_id, grade, status, subject) VALUES (?, ?, ?, ?, ?)',
+            (student_id, assignment_id, grade, status, 'your_subject')  # Если есть поле subject
+        )
+    
+    conn.commit()
+    conn.close()
+    
+    return redirect(url_for('day_view', date=request.args.get('date')))
 
 
 
