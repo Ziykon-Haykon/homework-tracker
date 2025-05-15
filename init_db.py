@@ -89,12 +89,6 @@ else:
     print("Таблица 'users' не найдена.")
 
 
-confirm = input("⚠️ Это удалит ВСЕ данные в базе. Продолжить? (y/n): ")
-if confirm.lower() != 'y':
-    print("Операция отменена.")
-    exit()
-
-
 conn.commit()
 conn.close()
 

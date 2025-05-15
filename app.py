@@ -47,32 +47,32 @@ def get_db_connection():
     conn.row_factory = sqlite3.Row
     return conn
 
-# Маршрут для входа
-@app.route('/login', methods=['POST'])
+@app.route('/login', methods=['GET', 'POST'])
 def login():
-    username = request.form['username']
-    password = request.form['password']
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
 
-    conn = sqlite3.connect('database.db')
-    conn.row_factory = sqlite3.Row
-    cursor = conn.cursor()
+        conn = sqlite3.connect('database.db')
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
 
-    cursor.execute('SELECT * FROM users WHERE username = ? AND password = ?', (username, password))
-    user = cursor.fetchone()
+        cursor.execute('SELECT * FROM users WHERE username = ? AND password = ?', (username, password))
+        user = cursor.fetchone()
 
-    if user:
-        session['user_id'] = user['id']
-        session['role'] = user['role']
+        if user:
+            session['user_id'] = user['id']
+            session['role'] = user['role']
+            print(f"Сессия: {session['user_id']}")
 
-        # Логирование сессии
-        print(f"Сессия: {session['user_id']}")  # Логируем ID пользователя из сессии
-
-        if user['role'] == 'teacher':
-            return redirect(url_for('teacher_dashboard'))
+            if user['role'] == 'teacher':
+                return redirect(url_for('teacher_dashboard'))
+            else:
+                return redirect(url_for('student_dashboard'))
         else:
-            return redirect(url_for('student_dashboard'))
-    else:
-        return '❌ Неверный логин или пароль'
+            return '❌ Неверный логин или пароль'
+
+    return render_template('login.html')  # ← Это для GET
 
 
 
@@ -259,6 +259,7 @@ def day_view(date):
     )
 
 
+
     conn.close()
     return render_template('day_assignments.html', date=date, assignments=assignments, role=role, student_id=student_id)
 
@@ -357,7 +358,7 @@ def profile():
     return response
 
 
-@app.route('/grade_assignment/<int:assignment_id>/<int:student_id>', methods=['POST'])
+@app.route('/grade/<int:assignment_id>/<int:student_id>', methods=['POST'])
 def grade_assignment(assignment_id, student_id):
     grade = request.form.get('grade')
     status = request.form.get('status')
