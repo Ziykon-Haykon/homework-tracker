@@ -242,34 +242,65 @@
                 <h2>Задания на {{ date }}</h2>
                 <p>DEBUG: {{ assignments }}</p>
 
+
+                {% if role == 'teacher' %}
+                    <form method="get">
+                        <label for="student">Выберите ученика:</label>
+                        <select name="student_id" id="student" onchange="this.form.submit()">
+                            <option value="">-- Выбрать --</option>
+                            {% for student in students %}
+                                <option value="{{ student['id'] }}" {% if student['id'] == student_id|int %}selected{% endif %}>
+                                    {{ student['name'] }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </form>
+                {% endif %}
+
             
                 <ul>
-                    {% for a in assignments %}
-                    <li>
-                        <strong>{{ a['content'] }}</strong><br>
-                        {% if a['file_path'] %}
-                        <a href="{{ url_for('uploaded_file', filename=a['file_path']) }}" download>Скачать файл</a>
+                {% for a in assignments %}
+                <li>
+                    <strong>{{ a['content'] }}</strong><br>
+                    {% if a['file_path'] %}
+                    <a href="{{ url_for('uploaded_file', filename=a['file_path']) }}" download>Скачать файл</a>
+                    {% endif %}
+
+                    {% if role == 'student' %}
+                    {% if a['submission'] %}
+                        <p>Вы сдали это задание.</p>
+                        {% if a['submission']['file_path'] %}
+                        <a href="{{ url_for('uploaded_file', filename=a['submission']['file_path']) }}" download>Скачать вашу работу</a>
                         {% endif %}
-                
-                        {% if role == 'teacher' and a['id'] %}
-                        <a href="{{ url_for('edit_assignment', assignment_id=a['id'], date=date) }}">Редактировать</a>
-                        <form method="POST" action="{{ url_for('delete_assignment', assignment_id=a['id'], date=date) }}">
-                            <button type="submit">Удалить</button>
+                    {% else %}
+                        <p>Вы ещё не сдали это задание.</p>
+                        <form method="POST" enctype="multipart/form-data">
+                        <input type="hidden" name="assignment_id" value="{{ a['id'] }}">
+                        <textarea name="content" placeholder="Комментарий..."></textarea>
+                        <input type="file" name="student_file">
+                        <button type="submit">Отправить</button>
                         </form>
-                
-                        {# 👇 Форма для оценки конкретного задания #}
-                        {% if student_id is defined %}
+                    {% endif %}
+                    {% endif %}
+
+                    {% if role == 'teacher' %}
+                    {% if a['submission'] %}
+                        <p>Студент сдал это задание.</p>
                         <form method="POST" action="{{ url_for('grade_assignment', assignment_id=a['id'], student_id=student_id) }}">
+                            <input type="hidden" name="date" value="{{ date }}"> 
                             <input type="text" name="grade" placeholder="Оценка">
+                            <input type="text" name="status" placeholder="Статус">
                             <button type="submit">Ставить оценку</button>
                         </form>
-                        {% endif %}
-                        {% endif %}
-                    </li>
                     {% else %}
-                    <p>Нет заданий на этот день.</p>
-                    {% endfor %}
+                        <p>Студент не сдал это задание.</p>
+                    {% endif %}
+                    {% endif %}
+                </li>
+                {% endfor %}
                 </ul>
+
+
                 
                     
             
@@ -278,19 +309,12 @@
                 <form method="post" enctype="multipart/form-data">
                     <textarea name="content" placeholder="Введите задание"></textarea><br>
                     <input type="file" name="file"><br>
+                    <label for="subject">Предмет:</label>
+                    <input type="text" name="subject" required>
                     <button type="submit">Добавить</button>
                 </form>
                 {% endif %}
             
-                {% if role == 'student' %}
-                <h3>Отправить задание</h3>
-                <form method="post" enctype="multipart/form-data">
-                    <textarea name="content" placeholder="Комментарий..."></textarea><br>
-                    <input type="file" name="student_file"><br>
-                    <button type="submit">Отправить</button>
-                </form>
-                {% endif %}
-
 
               
             
