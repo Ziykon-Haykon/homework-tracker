@@ -245,22 +245,32 @@
             
                 <ul>
                     {% for a in assignments %}
-                        <li>
-                            <strong>{{ a['content'] }}</strong><br>
-                            {% if a['file_path'] %}
-                                <a href="{{ url_for('uploaded_file', filename=a['file_path']) }}" download>Скачать файл</a>
-                            {% endif %}
-                            {% if role == 'teacher' and a['id'] %}
-                                <a href="{{ url_for('edit_assignment', assignment_id=a['id'], date=date) }}">Редактировать</a>
-                                <form method="POST" action="{{ url_for('delete_assignment', assignment_id=a['id'], date=date) }}">
-                                    <button type="submit">Удалить</button>
-                                </form>
-                            {% endif %}
-                        </li>
+                    <li>
+                        <strong>{{ a['content'] }}</strong><br>
+                        {% if a['file_path'] %}
+                        <a href="{{ url_for('uploaded_file', filename=a['file_path']) }}" download>Скачать файл</a>
+                        {% endif %}
+                
+                        {% if role == 'teacher' and a['id'] %}
+                        <a href="{{ url_for('edit_assignment', assignment_id=a['id'], date=date) }}">Редактировать</a>
+                        <form method="POST" action="{{ url_for('delete_assignment', assignment_id=a['id'], date=date) }}">
+                            <button type="submit">Удалить</button>
+                        </form>
+                
+                        {# 👇 Форма для оценки конкретного задания #}
+                        {% if student_id is defined %}
+                        <form method="POST" action="{{ url_for('grade_assignment', assignment_id=a['id'], student_id=student_id) }}">
+                            <input type="text" name="grade" placeholder="Оценка">
+                            <button type="submit">Ставить оценку</button>
+                        </form>
+                        {% endif %}
+                        {% endif %}
+                    </li>
                     {% else %}
-                        <p>Нет заданий на этот день.</p>
+                    <p>Нет заданий на этот день.</p>
                     {% endfor %}
-                    </ul>
+                </ul>
+                
                     
             
                 {% if role == 'teacher' %}
@@ -281,18 +291,8 @@
                 </form>
                 {% endif %}
 
-                {% for assignment in assignments %}
-                <li>
-                    <strong>{{ assignment['content'] }}</strong><br>
-                    {% if role == 'teacher' %}
-                    <form method="POST" action="{{ url_for('grade_assignment', assignment_id=assignment['id'], student_id=student_id) }}">
-                        <input type="text" name="grade" placeholder="Оценка">
-                        <button type="submit">Ставить оценку</button>
-                    </form>
-                    
-                    {% endif %}
-                </li>
-            {% endfor %}
+
+              
             
 
                 

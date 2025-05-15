@@ -240,11 +240,28 @@ def day_view(date):
             return redirect(url_for('day_view', date=date))
 
     # 👇 Чтение заданий (GET-запрос)
+    # 👇 Чтение заданий (GET-запрос)
     db.execute('SELECT * FROM assignments WHERE date = ?', (date,))
     assignments = db.fetchall()
 
+    if role == 'student':
+        student_id = session['user_id']
+    else:
+        student_id = None
+
     conn.close()
-    return render_template('day_assignments.html', date=date, assignments=assignments, role=role)
+    return render_template(
+        'day_assignments.html',
+        date=date,
+        assignments=assignments,
+        role=role,
+        student_id=student_id
+    )
+
+
+    conn.close()
+    return render_template('day_assignments.html', date=date, assignments=assignments, role=role, student_id=student_id)
+
 
 
 
