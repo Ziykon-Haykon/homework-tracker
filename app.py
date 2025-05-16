@@ -344,7 +344,7 @@ def calendar():
 @app.route('/user.html') 
 def profile():
     if 'user_id' not in session:
-        return redirect(url_for('login'))  # Защита: если не авторизован
+        return redirect(url_for('login'))
 
     user_id = session['user_id']
 
@@ -352,33 +352,64 @@ def profile():
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
-    # Получаем данные пользователя
     cursor.execute('SELECT username, role, email, class_name FROM users WHERE id = ?', (user_id,))
-
     user = cursor.fetchone()
-    print(f"Пользователь: {user}")  # Логируем, что мы получили из базы данных
 
-    # Получаем оценки и задания
-    cursor.execute('''
-        SELECT subject, AVG(grade) as average_grade,
-               COUNT(*) as total,
-               SUM(CASE WHEN status = 'done' THEN 1 ELSE 0 END) as completed
-        FROM grades
-        WHERE student_id = ?
-        GROUP BY subject
-    ''', (user_id,))
-    grades = cursor.fetchall()
-    print(f"Оценки: {grades}")  # Логируем, что мы получили из базы данных
+    # Получаем все уникальные предметы, по которым были задания
+    cursor.execute('SELECT DISTINCT subject FROM assignments')
+    subjects = cursor.fetchall()
+
+    subject_stats = []
+
+    for subject_row in subjects:
+        subject = subject_row['subject']
+
+        # Все задания по этому предмету
+        cursor.execute('SELECT * FROM assignments WHERE subject = ?', (subject,))
+        assignments = cursor.fetchall()
+
+        detailed_assignments = []
+        grades_list = []
+
+        for a in assignments:
+            # Проверим, сдавал ли ученик это задание
+            cursor.execute('''
+                SELECT grade, status FROM grades
+                WHERE student_id = ? AND assignment_id = ?
+            ''', (user_id, a['id']))
+            grade_row = cursor.fetchone()
+
+            detailed_assignments.append({
+                'id': a['id'],
+                'content': a['content'],
+                'grade': grade_row['grade'] if grade_row else None,
+                'status': grade_row['status'] if grade_row else 'not_submitted',
+            })
+
+            if grade_row and grade_row['grade'] is not None:
+                grades_list.append(grade_row['grade'])
+
+        # Вычисляем среднюю оценку
+        avg_grade = sum(grades_list) / len(grades_list) if grades_list else 0
+        completed = sum(1 for a in detailed_assignments if a['status'] == 'done')
+
+        subject_stats.append({
+            'subject': subject,
+            'average_grade': avg_grade,
+            'completed': completed,
+            'total': len(detailed_assignments),
+            'assignments': detailed_assignments
+        })
 
     conn.close()
 
-    # Отключаем кеширование для страницы
-    response = make_response(render_template('user.html', user=user, grades=grades))
+    response = make_response(render_template('user.html', user=user, grades=subject_stats))
     response.cache_control.no_cache = True
     response.cache_control.no_store = True
     response.cache_control.must_revalidate = True
 
     return response
+
 
 
 @app.route('/grade/<int:assignment_id>/<int:student_id>', methods=['POST'])
