@@ -198,6 +198,106 @@
     .grades-table tr:hover {
       background-color: #f1f1f1;
     }
+
+    .profile-info, .subject-card {
+    background: #fafafa;
+    border: 1px solid #ddd;
+    margin: 20px 0;
+    padding: 15px;
+    border-radius: 10px;
+    text-align: left;
+    
+}
+
+.subject-card h3 {
+    color: #6a1b9a;
+    margin-bottom: 10px;
+}
+
+.assignment {
+    background: #fff;
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: 8px;
+}
+.assignment p {
+    margin: 5px 0;
+}
+.assignment form {
+    margin-top: 10px;
+}
+.assignment textarea {
+    width: 100%;
+    height: 60px;
+    resize: vertical;
+}
+
+.subject-card {
+    background: #fff8ff;
+    border-left: 6px solid #8e24aa;
+    padding: 15px 20px;
+    margin: 15px 0;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    transition: 0.3s;
+}
+.subject-card:hover {
+    transform: translateY(-2px);
+}
+.progress-container {
+    background-color: #e0e0e0;
+    border-radius: 10px;
+    overflow: hidden;
+    height: 10px;
+    margin-top: 5px;
+    margin-bottom: 15px;
+}
+.progress-bar {
+    background-color: #8e24aa;
+    height: 100%;
+    transition: width 0.4s ease;
+}
+.back-button {
+  position: fixed;
+     /* отступ снизу */
+  left: 50%;      /* сдвигаем в центр экрана по горизонтали */
+  transform: translateX(-50%);  /* компенсируем сдвиг влево на 50% ширины кнопки */
+  padding: 10px 20px;
+  background-color: #6a1b9a;
+  color: white;
+  text-decoration: none;
+  border-radius: 10px;
+  transition: background-color 0.3s ease;
+  z-index: 1000;  /* чтобы была поверх других элементов */
+}
+
+.back-button:hover {
+    background-color: #8e24aa;
+}
+.OutButton {
+    position: relative;        /* фиксированное позиционирование относительно окна */
+    bottom: -300px;           /* отступ снизу */
+    right: -415px;            /* отступ справа */
+    padding: 10px 25px;
+    background-color: #e53935;
+    color: white;
+    font-weight: bold;
+    text-decoration: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(229, 57, 53, 0.5);
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+    z-index: 1000;          /* чтобы кнопка была поверх других элементов */
+}
+
+.OutButton:hover {
+    background-color: #d32f2f;
+    box-shadow: 0 6px 8px rgba(211, 47, 47, 0.7);
+}
+
+
+
     </style>
 </head>
 <body>
@@ -210,39 +310,71 @@
             </header>
 
 
-      <h1>Профиль</h1>
-      <p>Имя пользователя: {{ user.username }}</p>
-      <p>Роль: {{ user.role }}</p>
-      <p>Электронная почта: {{ user.email }}</p>
-      <p>Класс: {{ user.class_name if user.class_name else "—" }}</p>
+      <div class="profile-info">
+    <h1>Профиль пользователя</h1>
+    <p><strong>Имя:</strong> {{ user.username }}</p>
+    <p><strong>Роль:</strong> {{ user.role }}</p>
+    <p><strong>Почта:</strong> {{ user.email }}</p>
+    <p><strong>Класс:</strong> {{ user.class_name if user.class_name else "—" }}</p>
+</div>
 
 
-      <h2>Учет успеваемости</h2>
-      {% if grades %}
-          {% for grade in grades %}
-              <p>
-                  Предмет: {{ grade['subject'] }}<br>
-                  Средняя оценка: {{ "%.1f"|format(grade['average_grade'] or 0.0) }}<br>
-                  Завершено: {{ grade['completed'] }}<br>
-                  Всего заданий: {{ grade['total'] }}<br>
-              </p>
-              <ul>
-                  {% for assignment in grade['assignments'] %}
-                      <li>
-                          Задание: {{ assignment['content'] }}<br>
-                          {% if assignment['grade'] %}
-                              Оценка: {{ assignment['grade'] }}<br>
-                              Статус: {{ assignment['status'] }}
-                          {% else %}
-                              Оценка не выставлена
-                          {% endif %}
-                      </li>
-                  {% endfor %}
-              </ul>
-          {% endfor %}
-      {% else %}
-          <p>Нет данных для отображения.</p>
-      {% endif %}
+<h2>Успеваемость по предметам</h2>
+
+{% if grades %}
+    {% for grade in grades %}
+    <div class="subject-card">
+        <h3>{{ grade['subject'] or 'Без предмета' }}</h3>
+        <p>Средняя оценка: <strong>{{ "%.1f"|format(grade['average_grade'] or 0.0) }}</strong></p>
+        <p>Завершено: {{ grade['completed'] }} из {{ grade['total'] }}</p>
+
+        <!-- Прогресс-бар внутри цикла -->
+        <div class="progress-container">
+            <div class="progress-bar" style="width: {{ (grade['completed'] / grade['total']) * 100 if grade['total'] else 0 }}%"></div>
+        </div>
+
+            {% if grade['assignments'] %}
+                <div class="assignments">
+                    {% for assignment in grade['assignments'] %}
+                    <div class="assignment">
+                        <p><strong>Задание:</strong> {{ assignment['content'] }}</p>
+
+                        {% if assignment['file_path'] %}
+                            <a href="/uploads/{{ assignment['file_path'] }}" download>📎 Скачать файл</a><br>
+                        {% endif %}
+
+                        {% if user.role == 'student' %}
+                            {% if assignment['grade'] %}
+                                <p>Оценка: {{ assignment['grade'] }}</p>
+                                <p>Статус: {{ assignment['status'] }}</p>
+                            {% elif assignment['submitted'] %}
+                                <p style="color: orange;">Задание отправлено, ожидает проверки</p>
+                            {% else %}
+                                <p style="color: red;">Задание ещё не сдано</p>
+                                <form method="post" enctype="multipart/form-data" action="{{ url_for('profile') }}">
+                                    <textarea name="content" placeholder="Комментарий..."></textarea><br>
+                                    <input type="file" name="student_file"><br>
+                                    <input type="hidden" name="assignment_id" value="{{ assignment['id'] }}">
+                                    <button type="submit">Отправить</button>
+                                </form>
+                            {% endif %}
+                        {% else %}
+                            <p style="color: #666;"><em>Это задание предназначено для учеников.</em></p>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+    </div>
+    {% endfor %}
+{% else %}
+    <p>Нет данных для отображения.</p>
+{% endif %}
+<a href="{{ url_for(user.role + '_dashboard') }}" class="back-button">← Назад</a>
+
+                    <a href="{{ url_for('logout') }}" class="OutButton">Выйти из аккаунта</a>
+
       
 
     

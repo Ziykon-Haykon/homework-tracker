@@ -11,8 +11,7 @@
     <label for="username">Имя пользователя</label>
     <input type="text" name="username" required><br>
 
-    <input type="text" name="name" placeholder="Ваше имя" required>
-
+    <input type="text" name="name" placeholder="Ваше имя" required><br>
 
     <label for="password">Пароль</label>
     <input type="password" name="password" required><br>
@@ -26,11 +25,15 @@
     <label for="email">Электронная почта</label>
     <input type="email" name="email" required><br>
 
+    <label for="class_name">Класс (только для студентов)</label>
+    <input type="text" name="class_name" placeholder="например: 10A"><br>
+
     <label for="teacher_code">Код учителя (если роль учитель)</label>
     <input type="text" name="teacher_code"><br>
 
     <button type="submit">Зарегистрироваться</button>
 </form>
+
 {% with messages = get_flashed_messages(with_categories=true) %}
   {% if messages %}
     <ul>

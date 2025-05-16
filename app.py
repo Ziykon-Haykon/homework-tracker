@@ -94,10 +94,12 @@ def register():
         role = request.form['role']
         email = request.form['email']
         teacher_code = request.form.get('teacher_code', '')
+        class_name = request.form.get('class_name') if role == 'student' else None
+
 
         TEACHER_SECRET = 'teach2024'
 
-        if role == 'teacher' and teacher_code != TEACHER_SECRET:
+        if role == 'teacher' and teacher_code != TEACHER_SECRET:    
             flash("Неверный код учителя!", "danger")
             return redirect('/register')
 
@@ -106,9 +108,10 @@ def register():
 
         try:
             # Добавим поле name в запрос
-            cursor.execute('''INSERT INTO users (username, name, password, role, email) 
-                              VALUES (?, ?, ?, ?, ?)''', 
-                              (username, name, password, role, email))
+            cursor.execute('''INSERT INTO users (username, name, password, role, email, class_name) 
+                            VALUES (?, ?, ?, ?, ?, ?)''',
+                        (username, name, password, role, email, class_name))
+
             conn.commit()
             flash("Успешная регистрация!", "success")
             print(f"Пользователь {username} ({name}) зарегистрирован!")
@@ -340,8 +343,7 @@ def calendar():
 
 
 
-
-@app.route('/user.html') 
+@app.route('/user.html', methods=['GET', 'POST'])
 def profile():
     if 'user_id' not in session:
         return redirect(url_for('login'))
@@ -352,10 +354,30 @@ def profile():
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
+    # ✅ Если форма отправлена (задание)
+    if request.method == 'POST':
+        comment = request.form.get('content')
+        assignment_id = request.form.get('assignment_id')
+        student_file = request.files.get('student_file')
+        file_path = None
+
+        if student_file and student_file.filename:
+            filename = secure_filename(student_file.filename)
+            file_path = filename
+            student_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+
+        # Записываем в БД
+        cursor.execute('''
+            INSERT INTO submissions (assignment_id, student_id, date, comment, file_path)
+            VALUES (?, ?, date('now'), ?, ?)
+        ''', (assignment_id, user_id, comment, file_path))
+        conn.commit()
+
+    # --- Получаем данные пользователя
     cursor.execute('SELECT username, role, email, class_name FROM users WHERE id = ?', (user_id,))
     user = cursor.fetchone()
 
-    # Получаем все уникальные предметы, по которым были задания
+    # --- Предметы, по которым есть задания
     cursor.execute('SELECT DISTINCT subject FROM assignments')
     subjects = cursor.fetchall()
 
@@ -363,43 +385,60 @@ def profile():
 
     for subject_row in subjects:
         subject = subject_row['subject']
-
-        # Все задания по этому предмету
         cursor.execute('SELECT * FROM assignments WHERE subject = ?', (subject,))
         assignments = cursor.fetchall()
 
         detailed_assignments = []
         grades_list = []
+        role = user['role']
 
         for a in assignments:
-            # Проверим, сдавал ли ученик это задание
-            cursor.execute('''
-                SELECT grade, status FROM grades
-                WHERE student_id = ? AND assignment_id = ?
-            ''', (user_id, a['id']))
-            grade_row = cursor.fetchone()
+            if role == 'student':
+                # Логика с поиском оценок и отправленных заданий
+                cursor.execute('''
+                    SELECT grade, status FROM grades
+                    WHERE student_id = ? AND assignment_id = ?
+                ''', (user_id, a['id']))
+                grade_row = cursor.fetchone()
 
-            detailed_assignments.append({
-                'id': a['id'],
-                'content': a['content'],
-                'grade': grade_row['grade'] if grade_row else None,
-                'status': grade_row['status'] if grade_row else 'not_submitted',
-            })
+                if not grade_row:
+                    cursor.execute('''
+                        SELECT * FROM submissions
+                        WHERE student_id = ? AND assignment_id = ?
+                    ''', (user_id, a['id']))
+                    submission = cursor.fetchone()
+                else:
+                    submission = None
 
-            if grade_row and grade_row['grade'] is not None:
-                grades_list.append(grade_row['grade'])
+                detailed_assignments.append({
+                    'id': a['id'],
+                    'content': a['content'],
+                    'file_path': a['file_path'],
+                    'grade': grade_row['grade'] if grade_row else None,
+                    'status': grade_row['status'] if grade_row else 'not_submitted',
+                    'submitted': bool(submission)
+                })
+            else:
+                # Для учителя можно просто показывать задания без статусов
+                detailed_assignments.append({
+                    'id': a['id'],
+                    'content': a['content'],
+                    'file_path': a['file_path'],
+                    'grade': None,
+                    'status': 'not_applicable',
+                    'submitted': False
+                })
 
-        # Вычисляем среднюю оценку
-        avg_grade = sum(grades_list) / len(grades_list) if grades_list else 0
-        completed = sum(1 for a in detailed_assignments if a['status'] == 'done')
+    avg_grade = sum(grades_list) / len(grades_list) if grades_list else 0
+    completed = sum(1 for a in detailed_assignments if a['status'] == 'done')
 
-        subject_stats.append({
-            'subject': subject,
-            'average_grade': avg_grade,
-            'completed': completed,
-            'total': len(detailed_assignments),
-            'assignments': detailed_assignments
-        })
+    subject_stats.append({
+        'subject': subject,
+        'average_grade': avg_grade,
+        'completed': completed,
+        'total': len(detailed_assignments),
+        'assignments': detailed_assignments
+    })
 
     conn.close()
 
@@ -409,6 +448,7 @@ def profile():
     response.cache_control.must_revalidate = True
 
     return response
+
 
 
 
