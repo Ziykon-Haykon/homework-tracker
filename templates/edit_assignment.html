@@ -1,14 +1,104 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
+
 <head>
+    <meta charset="UTF-8">
     <title>Редактировать задание</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .edit-container {
+            background: white;
+            padding: 30px 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 25px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 200px;
+            padding: 15px;
+            border: 1.5px solid #ccc;
+            border-radius: 6px;
+            font-size: 1rem;
+            resize: vertical;
+            box-sizing: border-box;
+            transition: border-color 0.3s ease;
+        }
+
+        textarea:focus {
+            border-color: #4CAF50;
+            outline: none;
+        }
+
+        .btn-group {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+        button,
+        a.button-link {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+            transition: background-color 0.3s ease;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        button:hover {
+            background-color: #3e8e41;
+        }
+
+        a.button-link {
+            background-color: #ccc;
+            color: #333;
+        }
+
+        a.button-link:hover {
+            background-color: #bbb;
+        }
+    </style>
 </head>
+
 <body>
-    <h1>Редактировать задание</h1>
-    <form method="POST">
-        <textarea name="content" required>{{ assignment['content'] }}</textarea><br>
-        <button type="submit">Сохранить</button>
-    </form>
-    <a href="{{ url_for('day_view', date=assignment['date']) }}">Отмена</a>
+
+    <div class="edit-container">
+        <h1>Редактировать задание</h1>
+        <form method="POST">
+            <textarea name="content" required>{{ assignment['content'] }}</textarea>
+            <div class="btn-group">
+                <button type="submit">Сохранить</button>
+                <a class="button-link" href="{{ url_for('day_view', date=assignment['date']) }}">Отмена</a>
+            </div>
+        </form>
+    </div>
+
 </body>
+
 </html>

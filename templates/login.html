@@ -42,6 +42,15 @@
       border: none;
       border-radius: 5px;
     }
+    .register {
+            padding: 10px;
+      width: 100%;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 14px;
+    }
   </style>
 </head>
 
@@ -55,7 +64,7 @@
     </form>
     <!-- Кнопка регистрации -->
     <p>
-      <a href="{{ url_for('register') }}">Еще не зарегистрированы?</a>
+      <a class="register" href="{{ url_for('register') }}">Еще не зарегистрированы?</a>
     </p>
   </div>
 </body>

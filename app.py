@@ -1,6 +1,6 @@
 import json
 import sqlite3
-from flask import Flask, render_template, request, send_from_directory, redirect, session, url_for, flash, make_response
+from flask import Flask, render_template, request, send_from_directory, redirect, session, url_for, flash, make_response, send_file
 import os
 import datetime
 from werkzeug.utils import secure_filename
@@ -12,7 +12,15 @@ app.secret_key = 'your_secret_key'  # обязательно для сессий
 
 # 🔧 Настройки загрузки
 UPLOAD_FOLDER = os.path.join(app.root_path, 'static', 'uploads')
-ALLOWED_EXTENSIONS = {'txt', 'pdf', 'jpg', 'png', 'jpeg', 'gif'}
+ALLOWED_EXTENSIONS = {
+    'txt', 'pdf', 'jpg', 'png', 'jpeg', 'gif',       # уже есть
+    'doc', 'docx',                                    # документы Word
+    'ppt', 'pptx',                                    # презентации PowerPoint
+    'xls', 'xlsx',                                    # таблицы Excel
+    'odt', 'ods', 'odp',                              # форматы LibreOffice/OpenOffice
+    'zip', 'rar'                                      # архивы
+}
+
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
@@ -257,7 +265,6 @@ def day_view(date):
     else:
         student_id = session['user_id']
 
-    # --- Для каждого задания добавляем данные сдачи (submission) конкретного студента ---
     assignments_with_submissions = []
     for a in assignments:
         db.execute('''
@@ -265,10 +272,19 @@ def day_view(date):
         ''', (a['id'], student_id))
         submission = db.fetchone()
 
-        # Преобразуем Row в dict, чтобы добавить новое поле
+        # Добавим оценку, если она есть
+        if submission:
+            db.execute('''
+                SELECT grade FROM grades WHERE assignment_id = ? AND student_id = ?
+            ''', (a['id'], student_id))
+            grade = db.fetchone()
+            submission = dict(submission)
+            submission['grade'] = grade['grade'] if grade else None
+
         a_dict = dict(a)
         a_dict['submission'] = submission
         assignments_with_submissions.append(a_dict)
+
     
 
     students = []
@@ -486,9 +502,12 @@ def grade_assignment(assignment_id, student_id):
 
 
 
+
+
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+    file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    return send_file(file_path, as_attachment=True)
 
 
 

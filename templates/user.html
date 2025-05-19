@@ -277,7 +277,7 @@
 }
 .OutButton {
     position: relative;        /* фиксированное позиционирование относительно окна */
-    bottom: -300px;           /* отступ снизу */
+    bottom: -20px;           /* отступ снизу */
     right: -415px;            /* отступ справа */
     padding: 10px 25px;
     background-color: #e53935;
@@ -328,10 +328,9 @@
         <p>Средняя оценка: <strong>{{ "%.1f"|format(grade['average_grade'] or 0.0) }}</strong></p>
         <p>Завершено: {{ grade['completed'] }} из {{ grade['total'] }}</p>
 
-        <!-- Прогресс-бар внутри цикла -->
         <div class="progress-container">
-            <div class="progress-bar" style="width: {{ (grade['completed'] / grade['total']) * 100 if grade['total'] else 0 }}%"></div>
-        </div>
+            <div class="progress-bar progress-bar-{{ loop.index }}"></div>    </div>
+          
 
             {% if grade['assignments'] %}
                 <div class="assignments">
