@@ -1,16 +1,18 @@
-
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Домашнее задание на {{ date }}</title>
-    <style>        body {
+    <style>
+        body {
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
             background-color: #f4f4f4;
         }
+
         * {
             margin: 0;
             padding: 0;
@@ -40,7 +42,7 @@
             flex: 5;
             background: white;
             text-align: center;
-            padding: 1 ;
+            padding: 1;
             border-radius: 15px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         }
@@ -62,36 +64,42 @@
             font-size: 32px;
             color: #ffffff;
             text-shadow: 3px 3px 5px rgba(0, 0, 0, 0.5);
-            font-size: 2em;      /* размер текста как у h1 */
-            font-weight: bold;   /* жирный текст */
+            font-size: 2em;
+            /* размер текста как у h1 */
+            font-weight: bold;
+            /* жирный текст */
             text-decoration: none;
         }
 
-                .headerText2 {
+        .headerText2 {
+            position: relative;
             font-size: 32px;
             color: #ffffff;
             text-shadow: 3px 3px 5px rgba(0, 0, 0, 0.5);
-            font-size: 25px;      /* размер текста как у h1 */
-            font-weight: bold;   /* жирный текст */
+            font-size: 25px;
+            font-weight: bold;
             text-decoration: none;
+            right: 110px;
         }
 
-.Profil {
-    position: relative;
-    left: 410px;
-    top: 10px;
-    color: #f4f4f4;
-    text-shadow: 3px 3px 5px rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-}
+        .Profil {
+            position: relative;
+            left: 410px;
+            top: 10px;
+            color: #f4f4f4;
+            text-shadow: 3px 3px 5px rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+        }
 
-.imgUser {
-    width: 100px;
-    margin-left: 10px;
-    border-radius: 50%;
-    transition: 0.3s;
-}
+        .imgUser {
+            width: 100px;
+            margin-left: 10px;
+            border-radius: 50%;
+            transition: 0.3s;
+            position: relative;
+            left: 51px;
+        }
 
 
         .imgUser:hover {
@@ -116,6 +124,7 @@
         .button:hover {
             background: #9b30e2;
         }
+
         .container {
             max-width: 900px;
             margin: 0 auto;
@@ -129,10 +138,12 @@
             max-height: 70vh;
             overflow-y: auto;
         }
+
         .assignment-list {
             list-style: none;
             padding: 0;
         }
+
         .assignment-item {
             background-color: #f9f9f9;
             border: 1px solid #ddd;
@@ -140,17 +151,21 @@
             padding: 15px;
             border-radius: 12px;
         }
+
         .assignment-item p {
             margin-bottom: 8px;
         }
+
         .assignment-item a {
             color: #6a1b9a;
             text-decoration: none;
             font-weight: bold;
         }
+
         .assignment-form {
             margin-top: 15px;
         }
+
         .assignment-form textarea,
         .assignment-form input[type="file"],
         .assignment-form input[type="text"] {
@@ -160,6 +175,7 @@
             border-radius: 8px;
             border: 1px solid #ccc;
         }
+
         .assignment-form button {
             background-color: #6a1b9a;
             color: white;
@@ -170,9 +186,11 @@
             font-weight: bold;
             margin-top: 10px;
         }
+
         .assignment-form button:hover {
             background-color: #4a148c;
         }
+
         .back-button {
             position: fixed;
             bottom: 20px;
@@ -186,79 +204,90 @@
             font-weight: bold;
             transition: background-color 0.3s ease;
         }
+
         .back-button:hover {
             background-color: #4a148c;
         }
+
+        #text-profile {
+            left: 73px;
+            position: absolute;
+            top: 105px;
+        }
     </style>
 </head>
+
 <body>
-<div class="wrapper">
-    <div class="side left"></div>
-    <div class="content">
-        <header>
-            <a class="headerText" href="/index.html">HomeWork Tracker</a>
-            <a href="/user.html" class="Profil">
-                <span>Профиль</span>
-                <img class="imgUser" src="/userwhite.png" alt="Профиль">
-            </a>
-            <h1 class="headerText2">Задания на {{ date }}</h1>
-        </header>
-        <div class="main-content">
-            {% if role == 'teacher' %}
+    <div class="wrapper">
+        <div class="side left"></div>
+        <div class="content">
+            <header>
+                <a class="headerText" href="/index.html">HomeWork Tracker</a>
+                <a href="/user.html" class="Profil">
+                    <span id="text-profile">Профиль</span>
+                    <img class="imgUser" src="/userwhite.png" href="/user.html" alt="Профиль">
+                </a>
+                <h1 class="headerText2">Задания на {{ date }}</h1>
+            </header>
+            <div class="main-content">
+                {% if role == 'teacher' %}
                 <form method="get">
                     <label for="student">Выберите ученика:</label>
                     <select name="student_id" id="student" onchange="this.form.submit()">
                         <option value="">-- Выбрать --</option>
                         {% for student in students %}
-                            <option value="{{ student['id'] }}" {% if student['id'] == student_id|int %}selected{% endif %}>{{ student['name'] }}</option>
+                        <option value="{{ student['id'] }}" {% if student['id']==student_id|int %}selected{% endif %}>{{
+                            student['name'] }}</option>
                         {% endfor %}
                     </select>
                 </form>
-            {% endif %}
+                {% endif %}
 
-            <div class="assignment-list">
-                {% for a in assignments %}
-                <div class="assignment-item">
-                    <p><strong>Задание:</strong> {{ a['content'] }}</p>
-                    {% if a['file_path'] %}
+                <div class="assignment-list">
+                    {% for a in assignments %}
+                    <div class="assignment-item">
+                        <p><strong>Задание:</strong> {{ a['content'] }}</p>
+                        {% if a['file_path'] %}
                         <a href="{{ url_for('uploaded_file', filename=a['file_path']) }}" download>📎 Скачать файл</a>
-                    {% endif %}
-
-                    {% if role == 'student' %}
-                        {% if a['submission'] %}
-                            <p style="color: green;">✅ Вы сдали это задание.</p>
-                            {% if a['submission']['file_path'] %}
-                                <a href="{{ url_for('uploaded_file', filename=a['submission']['file_path']) }}" download>📄 Ваша работа</a>
-                            {% endif %}
-                        {% else %}
-                            <p style="color: red;">❌ Вы ещё не сдали это задание.</p>
-                            <form method="POST" enctype="multipart/form-data" class="assignment-form">
-                                <input type="hidden" name="assignment_id" value="{{ a['id'] }}">
-                                <textarea name="content" placeholder="Комментарий..."></textarea>
-                                <input type="file" name="student_file">
-                                <button type="submit">Отправить</button>
-                            </form>
                         {% endif %}
-                    {% endif %}
 
-                    {% if role == 'teacher' %}
+                        {% if role == 'student' %}
                         {% if a['submission'] %}
-                            <p style="color: green;">📥 Студент сдал задание.</p>
-                            <form method="POST" class="assignment-form" action="{{ url_for('grade_assignment', assignment_id=a['id'], student_id=student_id) }}">
-                                <input type="hidden" name="date" value="{{ date }}">
-                                <input type="text" name="grade" placeholder="Оценка">
-                                <input type="text" name="status" placeholder="Статус">
-                                <button type="submit">Ставить оценку</button>
-                            </form>
-                        {% else %}
-                            <p style="color: darkred;">❌ Студент не сдал задание.</p>
+                        <p style="color: green;">✅ Вы сдали это задание.</p>
+                        {% if a['submission']['file_path'] %}
+                        <a href="{{ url_for('uploaded_file', filename=a['submission']['file_path']) }}" download>📄 Ваша
+                            работа</a>
                         {% endif %}
-                    {% endif %}
+                        {% else %}
+                        <p style="color: red;">❌ Вы ещё не сдали это задание.</p>
+                        <form method="POST" enctype="multipart/form-data" class="assignment-form">
+                            <input type="hidden" name="assignment_id" value="{{ a['id'] }}">
+                            <textarea name="content" placeholder="Комментарий..."></textarea>
+                            <input type="file" name="student_file">
+                            <button type="submit">Отправить</button>
+                        </form>
+                        {% endif %}
+                        {% endif %}
+
+                        {% if role == 'teacher' %}
+                        {% if a['submission'] %}
+                        <p style="color: green;">📥 Студент сдал задание.</p>
+                        <form method="POST" class="assignment-form"
+                            action="{{ url_for('grade_assignment', assignment_id=a['id'], student_id=student_id) }}">
+                            <input type="hidden" name="date" value="{{ date }}">
+                            <input type="text" name="grade" placeholder="Оценка">
+                            <input type="text" name="status" placeholder="Статус">
+                            <button type="submit">Ставить оценку</button>
+                        </form>
+                        {% else %}
+                        <p style="color: darkred;">❌ Студент не сдал задание.</p>
+                        {% endif %}
+                        {% endif %}
+                    </div>
+                    {% endfor %}
                 </div>
-                {% endfor %}
-            </div>
 
-            {% if role == 'teacher' %}
+                {% if role == 'teacher' %}
                 <h3>Добавить задание</h3>
                 <form method="post" enctype="multipart/form-data" class="assignment-form">
                     <textarea name="content" placeholder="Введите задание"></textarea>
@@ -267,12 +296,13 @@
                     <input type="text" name="subject" required>
                     <button type="submit">Добавить</button>
                 </form>
-            {% endif %}
+                {% endif %}
 
+            </div>
+            <a href="{{ url_for(role + '_dashboard') }}" class="back-button">← Назад</a>
         </div>
-        <a href="{{ url_for(role + '_dashboard') }}" class="back-button">← Назад</a>
+        <div class="side right"></div>
     </div>
-    <div class="side right"></div>
-</div>
 </body>
+
 </html>
