@@ -214,6 +214,22 @@
             position: absolute;
             top: 105px;
         }
+
+        .delete-button {
+    background-color: #ff4d4d;
+    border: none;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+    margin-left: 8px;
+}
+
+.delete-button:hover {
+    background-color: #cc0000;
+}
     </style>
 </head>
 
@@ -271,7 +287,8 @@
 
                         {% if role == 'teacher' %}
                         <form method="POST" action="{{ url_for('delete_assignment', assignment_id=a['id']) }}" style="display:inline;">
-                            <button type="submit" onclick="return confirm('Удалить это задание?')">🗑 Удалить</button>
+                            <button type="submit" class="delete-button"
+                                onclick="return confirm('Ты уверен, что хочешь удалить это задание? 😢')">🗑 Удалить</button>
                         </form>
                         
                         {% if a['submission'] and a['submission']['grade'] %}

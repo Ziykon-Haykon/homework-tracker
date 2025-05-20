@@ -304,24 +304,6 @@ def day_view(date):
     )
 
 
-
-
-
-
-
-
-@app.route('/delete_assignment/<int:assignment_id>/<date>', methods=['POST'])
-def delete_assignment(assignment_id, date):
-    if session.get('role') != 'teacher':
-        return "⛔ Нет доступа", 403
-
-    conn = sqlite3.connect('database.db')
-    cursor = conn.cursor()
-    cursor.execute('DELETE FROM assignments WHERE id = ?', (assignment_id,))
-    conn.commit()
-    conn.close()
-    return redirect(url_for('day_view', date=date))
-
 @app.route('/edit_assignment/<int:assignment_id>', methods=['GET', 'POST'])
 def edit_assignment(assignment_id):
     conn = sqlite3.connect('database.db')
