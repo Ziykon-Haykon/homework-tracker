@@ -341,8 +341,19 @@ def edit_assignment(assignment_id):
     return render_template('edit_assignment.html', assignment=assignment)
 
 
+@app.route('/delete_assignment/<int:assignment_id>', methods=['POST'])
+def delete_assignment(assignment_id):
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
+    cursor.execute('DELETE FROM assignments WHERE id = ?', (assignment_id,))
+    conn.commit()
+    conn.close()
+    return redirect(request.referrer or url_for('teacher_dashboard'))
+
+
+
 @app.route('/calendar', methods=['GET'])
-def calendar():
+def calendar(): 
     # Получаем текущий месяц
     current_date = datetime.datetime.now()
     year = current_date.year

@@ -270,6 +270,10 @@
                         {% endif %}
 
                         {% if role == 'teacher' %}
+                        <form method="POST" action="{{ url_for('delete_assignment', assignment_id=a['id']) }}" style="display:inline;">
+                            <button type="submit" onclick="return confirm('Удалить это задание?')">🗑 Удалить</button>
+                        </form>
+                        
                         {% if a['submission'] and a['submission']['grade'] %}
                         <p>Оценка: {{ a['submission']['grade'] }}</p>
                         {% elif a['submission'] %}
