@@ -9,17 +9,17 @@ from werkzeug.utils import secure_filename
 
 
 app = Flask(__name__, static_folder='templates')
-app.secret_key = 'your_secret_key'  # обязательно для сессий
+app.secret_key = 'your_secret_key'  
 
-# 🔧 Настройки загрузки
+
 UPLOAD_FOLDER = os.path.join(app.root_path, 'static', 'uploads')
 ALLOWED_EXTENSIONS = {
     'txt', 'pdf', 'jpg', 'png', 'jpeg', 'gif',       # НЕТ
-    'doc', 'docx',                                    # документы Word
-    'ppt', 'pptx',                                    # презентации PowerPoint
-    'xls', 'xlsx',                                    # таблицы Excel
-    'odt', 'ods', 'odp',                              # форматы LibreOffice/OpenOffice
-    'zip', 'rar'                                      # архивы
+    'doc', 'docx',                                    
+    'ppt', 'pptx',                                    
+    'xls', 'xlsx',                                    
+    'odt', 'ods', 'odp',                             
+    'zip', 'rar'                                    
 }
 
 
@@ -28,12 +28,12 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
-# 🧱 Убедиться, что папка существует
+
 if not os.path.exists(UPLOAD_FOLDER):
   os.makedirs(UPLOAD_FOLDER)
 
 
-# ✅ Проверка разрешений
+
 
 
 def allowed_file(filename):
@@ -41,16 +41,16 @@ def allowed_file(filename):
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-# Обслуживаем статические файлы из папки 'main'
+
 @app.route('/<path:path>')
 def serve_static(path):
     return send_from_directory(os.path.join(app.static_folder), path)
 
 @app.route('/')
 def index():
-    return render_template('login.html')  # покажет login.html при заходе
+    return render_template('login.html')  
 
-# Функции для работы с базой данных
+
 def get_db_connection():
     conn = sqlite3.connect('database.db')
     conn.row_factory = sqlite3.Row
@@ -81,7 +81,7 @@ def login():
         else:
             return '❌ Неверный логин или пароль'
 
-    return render_template('login.html')  # ← Это для GET
+    return render_template('login.html')  
 
 
 
@@ -90,7 +90,7 @@ def login():
 @app.route('/protected')
 def protected():
     if 'user_id' not in session:
-        return redirect(url_for('login'))  # Если пользователь не авторизован, перенаправляем на страницу входа
+        return redirect(url_for('login'))  
     return 'Здесь защищенная страница для авторизованных пользователей'
 
 
@@ -98,7 +98,7 @@ def protected():
 def register():
     if request.method == 'POST':
         username = request.form['username']
-        name = request.form['name']  # Новое поле
+        name = request.form['name'] 
         password = request.form['password']
         role = request.form['role']
         email = request.form['email']
@@ -116,7 +116,7 @@ def register():
         cursor = conn.cursor()
 
         try:
-            # Добавим поле name в запрос
+
             cursor.execute('''INSERT INTO users (username, name, password, role, email, class_name) 
                             VALUES (?, ?, ?, ?, ?, ?)''',
                         (username, name, password, role, email, class_name))
@@ -139,31 +139,28 @@ def register():
 
 
 
-# Маршрут для выхода
+
 @app.route('/logout')
 def logout():
-    session.pop('user_id', None)  # Удалить user_id из сессии
-    session.pop('role', None)  # Удалить роль из сессии
-    return redirect('/')  # Перенаправить на страницу входа
+    session.pop('user_id', None)  
+    session.pop('role', None)  
+    return redirect('/') 
 
 @app.route('/teacher')
 def teacher_dashboard():
-    # Получаем текущую дату
+
     current_date = datetime.now()
     year = current_date.year
     month = current_date.month
 
-    # Подключаемся к базе данных
+
     conn = sqlite3.connect('database.db')
-    conn.row_factory = sqlite3.Row  # Настроим курсор для возвращения строк как словарей
+    conn.row_factory = sqlite3.Row  
     cursor = conn.cursor()
 
-    # Получаем все даты с заданиями для текущего месяца
     cursor.execute("SELECT DISTINCT date FROM assignments WHERE strftime('%Y-%m', date) = ?", (f"{year}-{month:02d}",))
-    assignment_dates = {row['date'] for row in cursor.fetchall()}  # Используем row['date'], потому что row — это словарь
+    assignment_dates = {row['date'] for row in cursor.fetchall()}  
     conn.close()
-
-    # Передаём данные в шаблон
     return render_template('teacher_dashboard.html', year=year, month=month, assignment_dates=assignment_dates, assignment_status_by_date={})
 
 
@@ -181,7 +178,7 @@ def student_dashboard():
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
-    # Получаем даты заданий
+
     cursor.execute("""
         SELECT date 
         FROM assignments 
@@ -189,7 +186,7 @@ def student_dashboard():
     """, (f"{year}-{month:02d}",))
     assignment_dates = {row['date'] for row in cursor.fetchall()}
 
-    # Получаем даты, когда ученик сдал
+
     cursor.execute("""
         SELECT date 
         FROM submissions 
@@ -197,7 +194,7 @@ def student_dashboard():
     """, (user_id, f"{year}-{month:02d}"))
     submission_dates = {row['date'] for row in cursor.fetchall()}
 
-    # Формируем статус по дате
+
     assignment_status_by_date = {}
     for date in assignment_dates:
         if date in submission_dates:
@@ -205,13 +202,13 @@ def student_dashboard():
         else:
             assignment_status_by_date[date] = 'not_completed'
 
-    # Составляем календарь на месяц
+
     cal = calendar.Calendar()
     calendar_weeks = list(cal.itermonthdates(year, month))
     weeks = [calendar_weeks[i:i+7] for i in range(0, len(calendar_weeks), 7)]
 
     
-    # Преобразуем в список недель (по 7 дней)
+ 
     weeks = [calendar_weeks[i:i+7] for i in range(0, len(calendar_weeks), 7)]
 
     conn.close()
@@ -258,7 +255,7 @@ def day_view(date):
     if request.method == 'POST':
         if role == 'teacher':
             content = request.form.get('content')
-            subject = request.form.get('subject')  # <-- получаем subject из формы
+            subject = request.form.get('subject')  
             file = request.files.get('file')
             file_path = None
 
@@ -296,11 +293,11 @@ def day_view(date):
             conn.close()
             return redirect(url_for('day_view', date=date))
 
-    # --- Получаем все задания на дату ---
+
     db.execute('SELECT * FROM assignments WHERE date = ?', (date,))
     assignments = db.fetchall()
 
-    # --- Определяем student_id в зависимости от роли ---
+ 
     if role == 'teacher':
         student_id = request.args.get('student_id')
     else:
@@ -313,7 +310,7 @@ def day_view(date):
         ''', (a['id'], student_id))
         submission = db.fetchone()
 
-        # Добавим оценку, если она есть
+
         if submission:
             db.execute('''
                 SELECT grade FROM grades WHERE assignment_id = ? AND student_id = ?
@@ -341,7 +338,7 @@ def day_view(date):
         assignments=assignments_with_submissions,
         role=role,
         student_id=student_id,
-        students=students  # <--- передаём список студентов
+        students=students  
     )
 
 
@@ -375,21 +372,6 @@ def delete_assignment(assignment_id):
 
 
 
-# @app.route('/calendar', methods=['GET'])
-# def calendar_page(): 
-#     # Получаем текущий месяц
-#     current_date = datetime.datetime.now()
-#     year = current_date.year
-#     month = current_date.month
-
-#     # Получаем все даты, для которых есть задания
-#     conn = sqlite3.connect('database.db')
-#     cursor = conn.cursor()
-#     cursor.execute("SELECT DISTINCT date FROM assignments WHERE strftime('%Y-%m', date) = ?", (f"{year}-{month:02d}",))
-#     assignment_dates = {row['date'] for row in cursor.fetchall()}
-#     conn.close()
-
-#     return render_template('calendar.html', year=year, month=month, assignment_dates=assignment_dates)
 
 
 
@@ -404,7 +386,6 @@ def profile():
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
-    # ✅ Если форма отправлена (задание)
     if request.method == 'POST':
         comment = request.form.get('content')
         assignment_id = request.form.get('assignment_id')
@@ -416,18 +397,17 @@ def profile():
             file_path = filename
             student_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 
-        # Записываем в БД
+        
         cursor.execute('''
             INSERT INTO submissions (assignment_id, student_id, date, comment, file_path)
             VALUES (?, ?, date('now'), ?, ?)
         ''', (assignment_id, user_id, comment, file_path))
         conn.commit()
 
-    # --- Получаем данные пользователя
     cursor.execute('SELECT username, role, email, class_name FROM users WHERE id = ?', (user_id,))
     user = cursor.fetchone()
 
-    # --- Предметы, по которым есть задания
+
     cursor.execute('SELECT DISTINCT subject FROM assignments')
     subjects = cursor.fetchall()
 
@@ -444,7 +424,7 @@ def profile():
 
         for a in assignments:
             if role == 'student':
-                # Логика с поиском оценок и отправленных заданий
+             
                 cursor.execute('''
                     SELECT grade, status FROM grades
                     WHERE student_id = ? AND assignment_id = ?
@@ -469,7 +449,7 @@ def profile():
                     'submitted': bool(submission)
                 })
             else:
-                # Для учителя можно просто показывать задания без статусов
+                
                 detailed_assignments.append({
                     'id': a['id'],
                     'content': a['content'],
@@ -506,7 +486,7 @@ def profile():
 def grade_assignment(assignment_id, student_id):
     grade = request.form.get('grade')
     status = request.form.get('status')
-    date = request.form.get('date')  # <-- ВАЖНО: теперь date из формы!
+    date = request.form.get('date') 
 
     conn = get_db_connection()
     existing_grade = conn.execute(
@@ -528,7 +508,7 @@ def grade_assignment(assignment_id, student_id):
     conn.commit()
     conn.close()
 
-    return redirect(url_for('day_view', date=date))  # <-- Теперь всё будет работать!
+    return redirect(url_for('day_view', date=date))  
 
 
 
