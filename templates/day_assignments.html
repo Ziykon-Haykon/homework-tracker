@@ -85,7 +85,7 @@
         .Profil {
             position: relative;
             left: 410px;
-            top: 10px;
+            top: -10px;
             color: #f4f4f4;
             text-shadow: 3px 3px 5px rgba(0, 0, 0, 0.5);
             display: flex;
@@ -93,7 +93,7 @@
         }
 
         .imgUser {
-            width: 100px;
+            width: 90px;
             margin-left: 10px;
             border-radius: 50%;
             transition: 0.3s;
@@ -260,19 +260,20 @@
                 {% endif %}
 
                 <div class="assignment-list">
+                    {% if assignments|length == 0 %}
+                    <h2>На данный день задание отсутствует.</h2>
+                    {% else %}
                     {% for a in assignments %}
                     <div class="assignment-item">
                         <p><strong>Задание:</strong> {{ a['content'] }}</p>
                         {% if a['file_path'] %}
                         <a href="{{ url_for('uploaded_file', filename=a['file_path']) }}" download>📎 Скачать файл</a>
                         {% endif %}
-
                         {% if role == 'student' %}
                         {% if a['submission'] %}
                         <p style="color: green;">✅ Вы сдали это задание.</p>
                         {% if a['submission']['file_path'] %}
-                        <a href="{{ url_for('uploaded_file', filename=a['submission']['file_path']) }}" download>📄 Ваша
-                            работа</a>
+                        <a href="{{ url_for('uploaded_file', filename=a['submission']['file_path']) }}" download>📄 Ваша работа</a>
                         {% endif %}
                         {% else %}
                         <p style="color: red;">❌ Вы ещё не сдали это задание.</p>
@@ -284,13 +285,11 @@
                         </form>
                         {% endif %}
                         {% endif %}
-
                         {% if role == 'teacher' %}
                         <form method="POST" action="{{ url_for('delete_assignment', assignment_id=a['id']) }}" style="display:inline;">
                             <button type="submit" class="delete-button"
                                 onclick="return confirm('Ты уверен, что хочешь удалить это задание? 😢')">🗑 Удалить</button>
                         </form>
-                        
                         {% if a['submission'] and a['submission']['grade'] %}
                         <p>Оценка: {{ a['submission']['grade'] }}</p>
                         {% elif a['submission'] %}
@@ -303,11 +302,12 @@
                         {% else %}
                         <p style="color: darkred;">❌ Студент не сдал задание.</p>
                         {% endif %}
-                      
                         {% endif %}
                     </div>
                     {% endfor %}
+                    {% endif %}
                 </div>
+                
 
                 {% if role == 'teacher' %}
                 <h3>Добавить задание</h3>

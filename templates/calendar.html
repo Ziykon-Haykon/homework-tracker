@@ -89,7 +89,9 @@
     border-radius: 10px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
-
+    .bg-green-300 { background-color: #86efac; }
+    .bg-red-300 { background-color: #fca5a5; }
+    .bg-white { background-color: #ffffff; }
 
     </style>
 </head>
@@ -107,35 +109,46 @@
         <div class="calendar-weekdays">
             <div>Пн</div><div>Вт</div><div>Ср</div><div>Чт</div><div>Пт</div><div>Сб</div><div>Вс</div>
         </div>
-        <div id="calendar" class="calendar">
-            {% for day in range(1, 32) %}
-                {% set day_str = '{:04d}-{:02d}-{:02d}'.format(year, month, day) %}
-                <a href="{{ url_for('day_view', date=day_str) }}">
-                    <div class="calendar-day {% if day_str in assignment_dates %}has-assignment{% endif %}">
-                        {{ day }}
-                    </div>
-                </a>
+        <table id="calendar" class="calendar">
+            {% for week in calendar_weeks %}
+            <tr>
+                {% for day in week %}
+                {% set date_str = day.strftime('%Y-%m-%d') %}
+                {% set status = assignment_status_by_date.get(date_str) %}
+                <td class="
+                            {% if status == 'completed' %}bg-green-300
+                            {% elif status == 'not_completed' %}bg-red-300
+                            {% else %}bg-white
+                            {% endif %}
+                        ">
+                    {{ day.day }}
+                </td>
+                {% endfor %}
+            </tr>
             {% endfor %}
-        </div>
+        </table>
+        
+        
     </div>
     
                 
 
 
 
-
     <script>
+        const assignmentStatusByDate = {{ assignment_status_by_date | tojson | safe }};
+
         const calendar = document.getElementById('calendar');
         const title = document.getElementById('calendar-title');
         const prevBtn = document.getElementById('prevMonth');
         const nextBtn = document.getElementById('nextMonth');
 
-        let currentDate = new Date();
-
         const monthNames = [
             "Январь", "Февраль", "Март", "Апрель", "Май", "Июнь",
             "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"
         ];
+
+        let currentDate = new Date();
 
         function generateCalendar(date) {
             const year = date.getFullYear();
@@ -155,11 +168,23 @@
             for (let i = 1; i <= daysInMonth; i++) {
                 const day = document.createElement('div');
                 day.className = 'calendar-day';
+
+                const mm = String(month + 1).padStart(2, '0');
+                const dd = String(i).padStart(2, '0');
+                const dateStr = `${year}-${mm}-${dd}`;
+
+                const status = assignmentStatusByDate[dateStr];
+                if (status === 'completed') {
+                    day.classList.add('bg-green-300');
+                } else if (status === 'not_completed') {
+                    day.classList.add('bg-red-300');
+                } else {
+                    day.classList.add('bg-white');
+                }
+
                 day.innerText = i;
                 day.onclick = () => {
-                    const mm = String(month + 1).padStart(2, '0');
-                    const dd = String(i).padStart(2, '0');
-                    window.location.href = `/day/${year}-${mm}-${dd}`;
+                    window.location.href = `/day/${dateStr}`;
                 };
                 calendar.appendChild(day);
             }
@@ -176,9 +201,9 @@
         });
 
         generateCalendar(currentDate);
-</script>
-
     </script>
+      
+
     
 
 </body>

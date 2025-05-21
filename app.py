@@ -2,7 +2,8 @@ import json
 import sqlite3
 from flask import Flask, render_template, request, send_from_directory, redirect, session, url_for, flash, make_response, send_file
 import os
-import datetime
+import calendar
+from datetime import datetime
 from werkzeug.utils import secure_filename
 
 
@@ -148,7 +149,7 @@ def logout():
 @app.route('/teacher')
 def teacher_dashboard():
     # Получаем текущую дату
-    current_date = datetime.datetime.now()
+    current_date = datetime.now()
     year = current_date.year
     month = current_date.month
 
@@ -163,26 +164,66 @@ def teacher_dashboard():
     conn.close()
 
     # Передаём данные в шаблон
-    return render_template('teacher_dashboard.html', year=year, month=month, assignment_dates=assignment_dates)
+    return render_template('teacher_dashboard.html', year=year, month=month, assignment_dates=assignment_dates, assignment_status_by_date={})
+
+
 
 
 
 @app.route('/student')
 def student_dashboard():
-    # Получаем текущую дату
-    current_date = datetime.datetime.now()
+    current_date = datetime.now()
     year = current_date.year
     month = current_date.month
+    user_id = session.get('user_id')
 
-    # Получаем все даты с заданиями для текущего месяца
     conn = sqlite3.connect('database.db')
-    conn.row_factory = sqlite3.Row  # <-- вот это добавлено
+    conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
-    cursor.execute("SELECT DISTINCT date FROM assignments WHERE strftime('%Y-%m', date) = ?", (f"{year}-{month:02d}",))
-    assignment_dates = {row['date'] for row in cursor.fetchall()}
-    conn.close()
 
-    return render_template('student_dashboard.html', year=year, month=month, assignment_dates=assignment_dates)
+    # Получаем даты заданий
+    cursor.execute("""
+        SELECT date 
+        FROM assignments 
+        WHERE strftime('%Y-%m', date) = ?
+    """, (f"{year}-{month:02d}",))
+    assignment_dates = {row['date'] for row in cursor.fetchall()}
+
+    # Получаем даты, когда ученик сдал
+    cursor.execute("""
+        SELECT date 
+        FROM submissions 
+        WHERE student_id = ? AND strftime('%Y-%m', date) = ?
+    """, (user_id, f"{year}-{month:02d}"))
+    submission_dates = {row['date'] for row in cursor.fetchall()}
+
+    # Формируем статус по дате
+    assignment_status_by_date = {}
+    for date in assignment_dates:
+        if date in submission_dates:
+            assignment_status_by_date[date] = 'completed'
+        else:
+            assignment_status_by_date[date] = 'not_completed'
+
+    # Составляем календарь на месяц
+    cal = calendar.Calendar()
+    calendar_weeks = list(cal.itermonthdates(year, month))
+    weeks = [calendar_weeks[i:i+7] for i in range(0, len(calendar_weeks), 7)]
+
+    
+    # Преобразуем в список недель (по 7 дней)
+    weeks = [calendar_weeks[i:i+7] for i in range(0, len(calendar_weeks), 7)]
+
+    conn.close()
+    print(assignment_status_by_date)
+
+    return render_template(
+        'student_dashboard.html',
+        year=year,
+        month=month,
+        assignment_status_by_date=assignment_status_by_date,
+        calendar_weeks=weeks
+    )
 
 
 
@@ -334,21 +375,21 @@ def delete_assignment(assignment_id):
 
 
 
-@app.route('/calendar', methods=['GET'])
-def calendar(): 
-    # Получаем текущий месяц
-    current_date = datetime.datetime.now()
-    year = current_date.year
-    month = current_date.month
+# @app.route('/calendar', methods=['GET'])
+# def calendar_page(): 
+#     # Получаем текущий месяц
+#     current_date = datetime.datetime.now()
+#     year = current_date.year
+#     month = current_date.month
 
-    # Получаем все даты, для которых есть задания
-    conn = sqlite3.connect('database.db')
-    cursor = conn.cursor()
-    cursor.execute("SELECT DISTINCT date FROM assignments WHERE strftime('%Y-%m', date) = ?", (f"{year}-{month:02d}",))
-    assignment_dates = {row['date'] for row in cursor.fetchall()}
-    conn.close()
+#     # Получаем все даты, для которых есть задания
+#     conn = sqlite3.connect('database.db')
+#     cursor = conn.cursor()
+#     cursor.execute("SELECT DISTINCT date FROM assignments WHERE strftime('%Y-%m', date) = ?", (f"{year}-{month:02d}",))
+#     assignment_dates = {row['date'] for row in cursor.fetchall()}
+#     conn.close()
 
-    return render_template('calendar.html', year=year, month=month, assignment_dates=assignment_dates)
+#     return render_template('calendar.html', year=year, month=month, assignment_dates=assignment_dates)
 
 
 
