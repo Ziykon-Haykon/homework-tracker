@@ -14,7 +14,7 @@ app.secret_key = 'your_secret_key'  # обязательно для сессий
 # 🔧 Настройки загрузки
 UPLOAD_FOLDER = os.path.join(app.root_path, 'static', 'uploads')
 ALLOWED_EXTENSIONS = {
-    'txt', 'pdf', 'jpg', 'png', 'jpeg', 'gif',       # уже есть
+    'txt', 'pdf', 'jpg', 'png', 'jpeg', 'gif',       # НЕТ
     'doc', 'docx',                                    # документы Word
     'ppt', 'pptx',                                    # презентации PowerPoint
     'xls', 'xlsx',                                    # таблицы Excel
