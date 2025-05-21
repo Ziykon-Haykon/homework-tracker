@@ -12,7 +12,7 @@ namespace HomeworkTrackerLauncher
         {
             Console.Title = "Homework Tracker Launcher by Макар & Мансур";
             Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.WriteLine("🔄 Инициализация системы...");
+            Console.WriteLine(" Инициализация системы...");
             Thread.Sleep(1000);
 
             InitializeModules();
@@ -60,7 +60,7 @@ namespace HomeworkTrackerLauncher
 
         static void LogEnvironmentInfo()
         {
-            Console.WriteLine("📝 Информация о среде:");
+            Console.WriteLine(" Информация о среде:");
             Console.WriteLine($"- Версия .NET: {Environment.Version}");
             Console.WriteLine($"- Имя пользователя: {Environment.UserName}");
             Console.WriteLine($"- Имя компьютера: {Environment.MachineName}");
