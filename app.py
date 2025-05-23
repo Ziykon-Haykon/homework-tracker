@@ -267,8 +267,8 @@ def day_view(date):
             title = request.form.get('title') or "Без названия"
 
             db.execute(
-                'INSERT INTO assignments (title, date, content, file_path, subject) VALUES (?, ?, ?, ?, ?)',
-                (title, date, content, file_path, subject)
+                'INSERT INTO assignments (title, date, content, file_path, subject, teacher_id) VALUES (?, ?, ?, ?, ?, ?)',
+                (title, date, content, file_path, subject, session['user_id']) 
             )
             conn.commit()
             conn.close()
@@ -381,12 +381,39 @@ def profile():
         return redirect(url_for('login'))
 
     user_id = session['user_id']
-
     conn = sqlite3.connect('database.db')
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
-    if request.method == 'POST':
+    cursor.execute('SELECT username, name, role, email, class_name FROM users WHERE id = ?', (user_id,))
+    user = cursor.fetchone()
+    role = user['role']
+
+    # 📊 Для учителя: обзор
+    if role == 'teacher':
+        cursor.execute('SELECT subject, COUNT(*) as count FROM assignments WHERE teacher_id = ? GROUP BY subject', (user_id,))
+        subject_overview = cursor.fetchall()
+
+        cursor.execute('SELECT COUNT(*) FROM assignments WHERE teacher_id = ?', (user_id,))
+        total_assignments = cursor.fetchone()[0]
+
+        cursor.execute('''SELECT COUNT(*) FROM submissions 
+                          JOIN assignments ON submissions.assignment_id = assignments.id
+                          WHERE assignments.teacher_id = ?''', (user_id,))
+        total_submissions = cursor.fetchone()[0]
+
+        cursor.execute('''SELECT COUNT(*) FROM grades 
+                          JOIN assignments ON grades.assignment_id = assignments.id
+                          WHERE assignments.teacher_id = ?''', (user_id,))
+        graded = cursor.fetchone()[0]
+    else:
+        subject_overview = []
+        total_assignments = 0
+        total_submissions = 0
+        graded = 0
+
+    # 📥 Приём ответа на задание
+    if request.method == 'POST' and role == 'student':
         comment = request.form.get('content')
         assignment_id = request.form.get('assignment_id')
         student_file = request.files.get('student_file')
@@ -397,20 +424,15 @@ def profile():
             file_path = filename
             student_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 
-        
         cursor.execute('''
             INSERT INTO submissions (assignment_id, student_id, date, comment, file_path)
             VALUES (?, ?, date('now'), ?, ?)
         ''', (assignment_id, user_id, comment, file_path))
         conn.commit()
 
-    cursor.execute('SELECT username, role, email, class_name FROM users WHERE id = ?', (user_id,))
-    user = cursor.fetchone()
-
-
+    # 📚 Общие данные по предметам
     cursor.execute('SELECT DISTINCT subject FROM assignments')
     subjects = cursor.fetchall()
-
     subject_stats = []
 
     for subject_row in subjects:
@@ -420,11 +442,9 @@ def profile():
 
         detailed_assignments = []
         grades_list = []
-        role = user['role']
 
         for a in assignments:
             if role == 'student':
-             
                 cursor.execute('''
                     SELECT grade, status FROM grades
                     WHERE student_id = ? AND assignment_id = ?
@@ -448,8 +468,10 @@ def profile():
                     'status': grade_row['status'] if grade_row else 'not_submitted',
                     'submitted': bool(submission)
                 })
+
+                if grade_row and grade_row['grade'] is not None:
+                    grades_list.append(grade_row['grade'])
             else:
-                
                 detailed_assignments.append({
                     'id': a['id'],
                     'content': a['content'],
@@ -459,25 +481,35 @@ def profile():
                     'submitted': False
                 })
 
-    avg_grade = sum(grades_list) / len(grades_list) if grades_list else 0
-    completed = sum(1 for a in detailed_assignments if a['status'] == 'done')
+        avg_grade = sum(grades_list) / len(grades_list) if grades_list else 0
+        completed = sum(1 for a in detailed_assignments if a['status'] == 'done')
 
-    subject_stats.append({
-        'subject': subject,
-        'average_grade': avg_grade,
-        'completed': completed,
-        'total': len(detailed_assignments),
-        'assignments': detailed_assignments
-    })
+        subject_stats.append({
+            'subject': subject,
+            'average_grade': avg_grade,
+            'completed': completed,
+            'total': len(detailed_assignments),
+            'assignments': detailed_assignments
+        })
 
     conn.close()
 
-    response = make_response(render_template('user.html', user=user, grades=subject_stats))
+    # 🎨 Передаём всё в шаблон
+    response = make_response(render_template(
+        'user.html',
+        user=user,
+        grades=subject_stats,
+        subject_overview=subject_overview if role == 'teacher' else None,
+        total_assignments=total_assignments if role == 'teacher' else None,
+        total_submissions=total_submissions if role == 'teacher' else None,
+        graded=graded if role == 'teacher' else None
+    ))
     response.cache_control.no_cache = True
     response.cache_control.no_store = True
     response.cache_control.must_revalidate = True
 
     return response
+
 
 
 

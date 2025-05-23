@@ -51,15 +51,14 @@
         header {
             background-color: #6a1b9a;
             color: white;
-            padding: 50px;
-            text-align: center;
-            position: relative;
+            padding: 20px 10px;
             border-radius: 0 0 20px 20px;
             display: flex;
-            justify-content: space-between;
             align-items: center;
             box-shadow: 0 6px 7px rgba(0, 0, 0, 0.6);
+            justify-content: space-between;
         }
+
 
         .headerText {
             font-size: 32px;
@@ -72,20 +71,21 @@
             text-decoration: none;
         }
 
-        header .imgUser {
-            position: absolute;
-            width: 100px;
+        .imgUser {
+            width: 70px;
             border-radius: 50%;
             transition: 0.3s;
-            left: -15px;
-            bottom: 0px;
-
         }
 
         .imgUser:hover {
             transform: scale(1.1);
         }
 
+                .pfb {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
 
         .headerText2 {
             position: absolute;
@@ -104,29 +104,11 @@
         }
 
         .Profil {
-            position: absolute;
-            border-radius: 50%;
             transition: 0.3s;
-            right: 40px;
-            top: 105px;
             color: #f4f4f4;
             text-shadow: 3px 3px 5px rgba(0, 0, 0, 0.5);
-
         }
 
-        .header-center {
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-            text-align: center;
-        }
-
-        .header-center h1 {
-            margin: 0;
-            font-size: 1.5rem;
-            color: white;
-            text-shadow: 3px 3px 5px rgba(0, 0, 0, 0.5);
-        }
     </style>
 </head>
 
@@ -135,15 +117,16 @@
         <div class="side left"></div>
         <div class="content">
             <header>
-                <a class="headerText">HomeWork Tracker</a>
-
-                <div class="header-center">
-                    <h1>Добро пожаловать, ученик!</h1>
+                <div>
+                    <a class="headerText" href="/index.html">HomeWork Tracker</a>
+                    <h2>Добро пожаловать, ученик!</h2>
                 </div>
 
                 <a href="/user.html" class="Profil">
-                    <span>Профиль</span>
-                    <img class="imgUser" src="/userwhite.png" alt="Профиль">
+                    <div class="pfb">
+                        <img class="imgUser" src="/userwhite.png" alt="Профиль">
+                        <span>Профиль</span>
+                    </div>
                 </a>
             </header>
 

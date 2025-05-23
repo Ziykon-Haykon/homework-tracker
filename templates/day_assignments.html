@@ -46,18 +46,15 @@
             border-radius: 15px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         }
-
         header {
             background-color: #6a1b9a;
             color: white;
-            padding: 20px;
-            text-align: center;
-            position: relative;
+            padding: 20px 10px;
             border-radius: 0 0 20px 20px;
             display: flex;
-            justify-content: space-between;
             align-items: center;
             box-shadow: 0 6px 7px rgba(0, 0, 0, 0.6);
+            justify-content: space-between;
         }
 
         .headerText {
@@ -70,37 +67,31 @@
             /* жирный текст */
             text-decoration: none;
         }
-
         .headerText2 {
-            position: relative;
-            font-size: 32px;
-            color: #ffffff;
+            position: absolute;
+            font-size: 24px;
             text-shadow: 3px 3px 5px rgba(0, 0, 0, 0.5);
-            font-size: 25px;
-            font-weight: bold;
-            text-decoration: none;
-            right: 110px;
+            left: 50%;
+            transform: translateX(-50%);
         }
 
         .Profil {
-            position: relative;
-            left: 410px;
-            top: -10px;
+            transition: 0.3s;
             color: #f4f4f4;
             text-shadow: 3px 3px 5px rgba(0, 0, 0, 0.5);
-            display: flex;
-            align-items: center;
         }
 
         .imgUser {
-            width: 90px;
-            margin-left: 10px;
+            width: 70px;
             border-radius: 50%;
             transition: 0.3s;
-            position: relative;
-            left: 51px;
         }
 
+        .pfb {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
 
         .imgUser:hover {
             transform: scale(1.1);
@@ -230,6 +221,62 @@
 .delete-button:hover {
     background-color: #cc0000;
 }
+
+.assignment-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+    gap: 20px;
+}
+
+.assignment-card {
+    background-color: #fff;
+    border: 2px solid #d1c4e9;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    text-align: left;
+        margin: 10px;
+}
+
+.assignment-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+.assignment-card p,
+.assignment-card form,
+.assignment-card a {
+    margin-bottom: 10px;
+}
+
+.select-student-card {
+    background-color: #ede7f6;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.select-student-card label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #4a148c;
+}
+
+.select-student-card select {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 16px;
+}
+
+
     </style>
 </head>
 
@@ -239,78 +286,89 @@
         <div class="content">
             <header>
                 <a class="headerText" >HomeWork Tracker</a>
+
                 <a href="/user.html" class="Profil">
-                    <span id="text-profile">Профиль</span>
-                    <img class="imgUser" src="/userwhite.png" href="/user.html" alt="Профиль">
+                    <div class="pfb">
+                        <img class="imgUser" src="/userwhite.png" alt="Профиль">
+                        <span>Профиль</span>
+                    </div>
                 </a>
+
                 <h1 class="headerText2">Задания на {{ date }}</h1>
             </header>
             <div class="main-content">
-                {% if role == 'teacher' %}
-                <form method="get">
-                    <label for="student">Выберите ученика:</label>
-                    <select name="student_id" id="student" onchange="this.form.submit()">
-                        <option value="">-- Выбрать --</option>
-                        {% for student in students %}
-                        <option value="{{ student['id'] }}" {% if student['id']==student_id|int %}selected{% endif %}>{{
-                            student['name'] }}</option>
-                        {% endfor %}
-                    </select>
-                </form>
-                {% endif %}
+{% if role == 'teacher' %}
+<div class="select-student-card">
+    <form method="get">
+        <label for="student">👨‍🎓 Выберите ученика:</label>
+        <select name="student_id" id="student" onchange="this.form.submit()">
+            <option value="">-- Выбрать --</option>
+            {% for student in students %}
+                <option value="{{ student['id'] }}" {% if student['id'] == student_id|int %}selected{% endif %}>
+                    {{ student['name'] }}
+                </option>
+            {% endfor %}
+        </select>
+    </form>
+</div>
+{% endif %}
 
-                <div class="assignment-list">
-                    {% if assignments|length == 0 %}
-                    <h2>На данный день задание отсутствует.</h2>
-                    {% else %}
-                    {% for a in assignments %}
-                    <div class="assignment-item">
-                        <p><strong>Задание:</strong> {{ a['content'] }}</p>
-                        {% if a['file_path'] %}
-                        <a href="{{ url_for('uploaded_file', filename=a['file_path']) }}" download>📎 Скачать файл</a>
-                        {% endif %}
-                        {% if role == 'student' %}
-                        {% if a['submission'] %}
-                        <p style="color: green;">✅ Вы сдали это задание.</p>
-                        {% if a['submission']['file_path'] %}
-                        <a href="{{ url_for('uploaded_file', filename=a['submission']['file_path']) }}" download>📄 Ваша работа</a>
-                        {% endif %}
-                        {% else %}
-                        <p style="color: red;">❌ Вы ещё не сдали это задание.</p>
-                        <form method="POST" enctype="multipart/form-data" class="assignment-form">
-                            <input type="hidden" name="assignment_id" value="{{ a['id'] }}">
-                            <textarea name="content" placeholder="Комментарий..."></textarea>
-                            <input type="file" name="student_file">
-                            <button type="submit">Отправить</button>
-                        </form>
-                        {% endif %}
-                        {% endif %}
-                        {% if role == 'teacher' %}
-                        <form method="POST" action="{{ url_for('delete_assignment', assignment_id=a['id']) }}" style="display:inline;">
-                            <button type="submit" class="delete-button"
-                                onclick="return confirm('Ты уверен, что хочешь удалить это задание? 😢')">🗑 Удалить</button>
-                        </form>
-                        {% if a['submission'] and a['submission']['grade'] %}
-                        <p>Оценка: {{ a['submission']['grade'] }}</p>
-                        {% elif a['submission'] %}
-                        <form method="POST" action="{{ url_for('grade_assignment', assignment_id=a['id'], student_id=student_id) }}">
-                            <input type="hidden" name="date" value="{{ date }}">
-                            <input type="hidden" name="status" value="done">
-                            <input type="number" name="grade" min="1" max="100" required>
-                            <button type="submit">Поставить оценку</button>
-                        </form>
-                        {% else %}
-                        <p style="color: darkred;">❌ Студент не сдал задание.</p>
-                        {% endif %}
-                        {% endif %}
-                    </div>
-                    {% endfor %}
-                    {% endif %}
-                </div>
+
+<h2 style="margin: 20px 0; color: #6a1b9a;">Задания на {{ date }}</h2>
+
+<div class="assignment-grid">
+    {% for a in assignments %}
+    <div class="assignment-card">
+        <p><strong>📘 Задание:</strong> {{ a['content'] }}</p>
+
+        {% if a['file_path'] %}
+        <a href="{{ url_for('uploaded_file', filename=a['file_path']) }}" download>📎 Скачать файл</a>
+        {% endif %}
+
+        {% if role == 'student' %}
+            {% if a['submission'] %}
+                <p style="color: green;">✅ Вы сдали это задание.</p>
+                {% if a['submission']['file_path'] %}
+                    <a href="{{ url_for('uploaded_file', filename=a['submission']['file_path']) }}">📄 Ваша работа</a>
+                {% endif %}
+            {% else %}
+                <p style="color: red;">❌ Вы ещё не сдали это задание.</p>
+                <form method="POST" enctype="multipart/form-data" class="assignment-form">
+                    <input type="hidden" name="assignment_id" value="{{ a['id'] }}">
+                    <textarea name="content" placeholder="Комментарий..."></textarea>
+                    <input type="file" name="student_file">
+                    <button type="submit">Отправить</button>
+                </form>
+            {% endif %}
+        {% endif %}
+
+        {% if role == 'teacher' %}
+            <form method="POST" action="{{ url_for('delete_assignment', assignment_id=a['id']) }}" style="display:inline;">
+                <button type="submit" class="delete-button"
+                    onclick="return confirm('Удалить это задание?')">🗑 Удалить</button>
+            </form>
+            {% if a['submission'] and a['submission']['grade'] %}
+                <p>Оценка: {{ a['submission']['grade'] }}</p>
+            {% elif a['submission'] %}
+                <form method="POST" action="{{ url_for('grade_assignment', assignment_id=a['id'], student_id=student_id) }}">
+                    <input type="hidden" name="date" value="{{ date }}">
+                    <input type="hidden" name="status" value="done">
+                    <input type="number" name="grade" min="1" max="100" required>
+                    <button type="submit">Поставить оценку</button>
+                </form>
+            {% else %}
+                <p style="color: darkred;">❌ Студент не сдал задание.</p>
+            {% endif %}
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+
                 
 
                 {% if role == 'teacher' %}
-                <h3>Добавить задание</h3>
+            <div class="assignment-card">
+                <h3 style="color: #6a1b9a;">➕ Добавить задание</h3>
                 <form method="post" enctype="multipart/form-data" class="assignment-form">
                     <textarea name="content" placeholder="Введите задание"></textarea>
                     <input type="file" name="file">
@@ -318,6 +376,8 @@
                     <input type="text" name="subject" required>
                     <button type="submit">Добавить</button>
                 </form>
+                </div>
+
                 {% endif %}
 
             </div>
