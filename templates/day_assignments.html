@@ -275,6 +275,22 @@
     border: 1px solid #ccc;
     font-size: 16px;
 }
+.download-button {
+    display: inline-block;
+    background-color: #6a1b9a;
+    color: white;
+    padding: 8px 10px;
+    border: none;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+    margin-right: 10px;
+}
+
+.download-button:hover {
+    background-color: #4a148c;
+}
 
 
     </style>
@@ -322,7 +338,8 @@
         <p><strong>📘 Задание:</strong> {{ a['content'] }}</p>
 
         {% if a['file_path'] %}
-        <a href="{{ url_for('uploaded_file', filename=a['file_path']) }}" download>📎 Скачать файл</a>
+        <a href="{{ url_for('uploaded_file', filename=a['file_path']) }}" download class="download-button">📎 Скачать файл</a>
+
         {% endif %}
 
         {% if role == 'student' %}
