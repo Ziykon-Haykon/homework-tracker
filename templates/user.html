@@ -398,7 +398,7 @@
     <p><strong>ФИО: </strong>{{ user.name }}</p>
     <p><strong>Роль:</strong> {{ user.role }}</p>
     <p><strong>Почта:</strong> {{ user.email }}</p>
-    <p><strong>Класс:</strong> {{ user.class_name if user.class_name else "—" }}</p>
+    <p><strong>Группа:</strong> {{ user.class_name if user.class_name else "—" }}</p>
 </div>
 
 {% if user.role == 'student' %}

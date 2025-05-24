@@ -1,10 +1,11 @@
 import json
 import sqlite3
-from flask import Flask, render_template, request, send_from_directory, redirect, session, url_for, flash, make_response, send_file
+from flask import Flask, render_template, request, send_from_directory, redirect, session, url_for, flash, make_response, send_file, get_flashed_messages
 import os
 import calendar
 from datetime import datetime
 from werkzeug.utils import secure_filename
+from werkzeug.security import generate_password_hash, check_password_hash
 
 
 
@@ -66,10 +67,10 @@ def login():
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
 
-        cursor.execute('SELECT * FROM users WHERE username = ? AND password = ?', (username, password))
+        cursor.execute('SELECT * FROM users WHERE username = ?', (username,))
         user = cursor.fetchone()
 
-        if user:
+        if user and check_password_hash(user['password'], password):    
             session['user_id'] = user['id']
             session['role'] = user['role']
             print(f"Сессия: {session['user_id']}")
@@ -79,7 +80,8 @@ def login():
             else:
                 return redirect(url_for('student_dashboard'))
         else:
-            return '❌ Неверный логин или пароль'
+            flash("❌ Неверный логин или пароль", "danger")
+            return redirect('/login')
 
     return render_template('login.html')  
 
@@ -96,6 +98,10 @@ def protected():
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
+    if request.method == 'GET':
+        get_flashed_messages()
+        return render_template('register.html')
+
     if request.method == 'POST':
         username = request.form['username']
         name = request.form['name'] 
@@ -104,10 +110,9 @@ def register():
         email = request.form['email']
         teacher_code = request.form.get('teacher_code', '')
         class_name = request.form.get('class_name') if role == 'student' else None
-
+        hashed_password = generate_password_hash(password)
 
         TEACHER_SECRET = 'teach2024'
-
         if role == 'teacher' and teacher_code != TEACHER_SECRET:    
             flash("Неверный код учителя!", "danger")
             return redirect('/register')
@@ -116,10 +121,10 @@ def register():
         cursor = conn.cursor()
 
         try:
-
-            cursor.execute('''INSERT INTO users (username, name, password, role, email, class_name) 
-                            VALUES (?, ?, ?, ?, ?, ?)''',
-                        (username, name, password, role, email, class_name))
+            cursor.execute('''
+                INSERT INTO users (username, name, class_name, password, role, email)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', (username, name, class_name, hashed_password, role, email))
 
             conn.commit()
             flash("Успешная регистрация!", "success")
@@ -135,6 +140,7 @@ def register():
             conn.close()
 
     return render_template('register.html')
+
 
 
 
