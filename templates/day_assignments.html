@@ -5,6 +5,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Домашнее задание на {{ date }}</title>
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+    <!-- jQuery и Select2 JS -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -165,6 +171,9 @@
             padding: 8px;
             border-radius: 8px;
             border: 1px solid #ccc;
+            max-width: 100%;
+            width: 100%;
+            box-sizing: border-box
         }
 
         .assignment-form button {
@@ -237,6 +246,9 @@
     transition: transform 0.2s ease, box-shadow 0.2s ease;
     text-align: left;
         margin: 10px;
+      word-wrap: break-word;     /* или word-break: break-word; */
+    overflow-wrap: break-word;
+    max-width: 100%;
 }
 
 .assignment-card:hover {
@@ -277,7 +289,7 @@
 }
 .download-button {
     display: inline-block;
-    background-color: #6a1b9a;
+    background-color: #00871b;
     color: white;
     padding: 8px 10px;
     border: none;
@@ -289,9 +301,32 @@
 }
 
 .download-button:hover {
-    background-color: #4a148c;
+    background-color: #0db604;
 }
 
+.file-block {
+    margin: 10px 0;
+    background: #f3e5f5;
+    padding: 10px 15px;
+    border-radius: 10px;
+    text-align: left;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.download-button {
+    display: inline-block;
+    margin-top: 5px;
+    background-color: #6a1b9a;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 6px;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+}
+
+.download-button:hover {
+    background-color: #4a148c;
+}
 
     </style>
 </head>
@@ -317,7 +352,7 @@
 <div class="select-student-card">
     <form method="get">
         <label for="student">👨‍🎓 Выберите ученика:</label>
-        <select name="student_id" id="student" onchange="this.form.submit()">
+        <select name="student_id" id="student" class="select2" onchange="this.form.submit()" style="width: 300px;">
             <option value="">-- Выбрать --</option>
             {% for student in students %}
                 <option value="{{ student['id'] }}" {% if student['id'] == student_id|int %}selected{% endif %}>
@@ -327,59 +362,84 @@
         </select>
     </form>
 </div>
+
+{% endif %}
+
+{% if assignments|length == 0 %}
+    <p style="text-align: center; margin: 20px; color: #888;">
+        💤 На этот день заданий пока нет.
+    </p>
 {% endif %}
 
 
-<h2 style="margin: 20px 0; color: #6a1b9a;">Задания на {{ date }}</h2>
-
 <div class="assignment-grid">
-    {% for a in assignments %}
-    <div class="assignment-card">
-        <p><strong>📘 Задание:</strong> {{ a['content'] }}</p>
+  {% for a in assignments %}
+  <div class="assignment-card">
+    <p><strong>📘 Задание:</strong> {{ a['content'] }}</p>
 
-        {% if a['file_path'] %}
-        <a href="{{ url_for('uploaded_file', filename=a['file_path']) }}" download class="download-button">📎 Скачать файл</a>
-
-        {% endif %}
-
-        {% if role == 'student' %}
-            {% if a['submission'] %}
-                <p style="color: green;">✅ Вы сдали это задание.</p>
-                {% if a['submission']['file_path'] %}
-                    <a href="{{ url_for('uploaded_file', filename=a['submission']['file_path']) }}">📄 Ваша работа</a>
-                {% endif %}
-            {% else %}
-                <p style="color: red;">❌ Вы ещё не сдали это задание.</p>
-                <form method="POST" enctype="multipart/form-data" class="assignment-form">
-                    <input type="hidden" name="assignment_id" value="{{ a['id'] }}">
-                    <textarea name="content" placeholder="Комментарий..."></textarea>
-                    <input type="file" name="student_file">
-                    <button type="submit">Отправить</button>
-                </form>
-            {% endif %}
-        {% endif %}
-
-        {% if role == 'teacher' %}
-            <form method="POST" action="{{ url_for('delete_assignment', assignment_id=a['id']) }}" style="display:inline;">
-                <button type="submit" class="delete-button"
-                    onclick="return confirm('Удалить это задание?')">🗑 Удалить</button>
-            </form>
-            {% if a['submission'] and a['submission']['grade'] %}
-                <p>Оценка: {{ a['submission']['grade'] }}</p>
-            {% elif a['submission'] %}
-                <form method="POST" action="{{ url_for('grade_assignment', assignment_id=a['id'], student_id=student_id) }}">
-                    <input type="hidden" name="date" value="{{ date }}">
-                    <input type="hidden" name="status" value="done">
-                    <input type="number" name="grade" min="1" max="100" required>
-                    <button type="submit">Поставить оценку</button>
-                </form>
-            {% else %}
-                <p style="color: darkred;">❌ Студент не сдал задание.</p>
-            {% endif %}
-        {% endif %}
+    <!-- 📎 Файл от учителя -->
+    {% if a['file_path'] %}
+    <div class="file-block">
+      <p><strong>📎 Файл учителя:</strong></p>
+      <a href="{{ url_for('uploaded_file', filename=a['file_path']) }}" class="download-button" download>⬇️ Скачать задание</a>
     </div>
-    {% endfor %}
+    {% endif %}
+
+    <!-- 👨‍🎓 Студент -->
+    {% if role == 'student' %}
+      {% if a['submission'] %}
+        <p style="color: green;">✅ Вы сдали это задание.</p>
+
+        {% if a['submission']['file_path'] %}
+        <div class="file-block">
+          <p><strong>📄 Ваша работа:</strong></p>
+          <a href="{{ url_for('uploaded_file', filename=a['submission']['file_path']) }}" class="download-button" download>⬇️ Скачать вашу работу</a>
+        </div>
+        {% endif %}
+      {% else %}
+        <p style="color: red;">❌ Вы ещё не сдали это задание.</p>
+        <form method="POST" enctype="multipart/form-data" class="assignment-form">
+          <input type="hidden" name="assignment_id" value="{{ a['id'] }}">
+          <textarea name="content" placeholder="Комментарий..."></textarea>
+          <input type="file" name="student_file">
+          <button type="submit">Отправить</button>
+        </form>
+      {% endif %}
+    {% endif %}
+
+    <!-- 👩‍🏫 Учитель -->
+    {% if role == 'teacher' %}
+      {% if a['submission'] %}
+        {% if a['submission']['file_path'] %}
+        <div class="file-block">
+          <p><strong>📄 Работа ученика:</strong></p>
+          <a href="{{ url_for('uploaded_file', filename=a['submission']['file_path']) }}" class="download-button" download>⬇️ Скачать файл ученика</a>
+        </div>
+        {% endif %}
+
+        {% if a['submission']['grade'] %}
+          <p>Оценка: {{ a['submission']['grade'] }}</p>
+        {% else %}
+          <form method="POST" action="{{ url_for('grade_assignment', assignment_id=a['id'], student_id=student_id) }}">
+            <input type="hidden" name="date" value="{{ date }}">
+            <input type="hidden" name="status" value="done">
+            <input type="number" name="grade" min="1" max="100" required>
+            <button type="submit">Поставить оценку</button>
+          </form>
+        {% endif %}
+      {% else %}
+        <p style="color: darkred;">❌ Студент не сдал задание.</p>
+      {% endif %}
+
+      <!-- Кнопка удаления -->
+      <form method="POST" action="{{ url_for('delete_assignment', assignment_id=a['id']) }}" style="display:inline;">
+        <button type="submit" class="delete-button" onclick="return confirm('Удалить это задание?')">🗑 Удалить</button>
+      </form>
+    {% endif %}
+  </div>
+  {% endfor %}
 </div>
+
 
                 
 
@@ -402,6 +462,16 @@
         </div>
         <div class="side right"></div>
     </div>
+
+<script>
+    $(document).ready(function() {
+        $('.select2').select2({
+            placeholder: "Выберите ученика",
+            allowClear: true
+        });
+    });
+</script>
+
 </body>
 
 </html>

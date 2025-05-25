@@ -1,0 +1,134 @@
+Ñòðóêòóðà ïàïîê
+Ñåðèéíûé íîìåð òîìà: 2CD2-CD44
+C:.
+¦   .gitignore
+¦   app.py
+¦   app.spec
+¦   database.db
+¦   init_db.py
+¦   structure.txt
+¦   
++---.vscode
+¦       launch.json
+¦       
++---build
+¦   L---app
+¦       ¦   Analysis-00.toc
+¦       ¦   app.pkg
+¦       ¦   base_library.zip
+¦       ¦   EXE-00.toc
+¦       ¦   PKG-00.toc
+¦       ¦   PYZ-00.pyz
+¦       ¦   PYZ-00.toc
+¦       ¦   warn-app.txt
+¦       ¦   xref-app.html
+¦       ¦   
+¦       L---localpycs
+¦               pyimod01_archive.pyc
+¦               pyimod02_importers.pyc
+¦               pyimod03_ctypes.pyc
+¦               pyimod04_pywin32.pyc
+¦               struct.pyc
+¦               
++---Console App
+¦   ¦   Console App.sln
+¦   ¦   
+¦   +---.vs
+¦   ¦   ¦   ProjectSettings.json
+¦   ¦   ¦   slnx.sqlite
+¦   ¦   ¦   VSWorkspaceState.json
+¦   ¦   ¦   
+¦   ¦   +---Console App
+¦   ¦   ¦   +---DesignTimeBuild
+¦   ¦   ¦   ¦       .dtbcache.v2
+¦   ¦   ¦   ¦       
+¦   ¦   ¦   +---FileContentIndex
+¦   ¦   ¦   ¦       2f699c37-cb4c-483d-8882-f9b5cf11e747.vsidx
+¦   ¦   ¦   ¦       416fccc3-7345-4bad-af6f-838f41bd2d22.vsidx
+¦   ¦   ¦   ¦       
+¦   ¦   ¦   L---v17
+¦   ¦   ¦           .futdcache.v2
+¦   ¦   ¦           .suo
+¦   ¦   ¦           .wsuo
+¦   ¦   ¦           DocumentLayout.backup.json
+¦   ¦   ¦           DocumentLayout.json
+¦   ¦   ¦           
+¦   ¦   L---ProjectEvaluation
+¦   ¦           console app.metadata.v9.bin
+¦   ¦           console app.projects.v9.bin
+¦   ¦           console app.strings.v9.bin
+¦   ¦           
+¦   L---Console App
+¦       ¦   Console App.csproj
+¦       ¦   Program.cs
+¦       ¦   
+¦       +---bin
+¦       ¦   L---Debug
+¦       ¦       L---net8.0
+¦       ¦               Console App.deps.json
+¦       ¦               Console App.dll
+¦       ¦               Console App.exe
+¦       ¦               Console App.pdb
+¦       ¦               Console App.runtimeconfig.json
+¦       ¦               
+¦       L---obj
+¦           ¦   Console App.csproj.nuget.dgspec.json
+¦           ¦   Console App.csproj.nuget.g.props
+¦           ¦   Console App.csproj.nuget.g.targets
+¦           ¦   project.assets.json
+¦           ¦   project.nuget.cache
+¦           ¦   
+¦           +---Debug
+¦           ¦   L---net8.0
+¦           ¦       ¦   .NETCoreApp,Version=v8.0.AssemblyAttributes.cs
+¦           ¦       ¦   apphost.exe
+¦           ¦       ¦   Console App.AssemblyInfo.cs
+¦           ¦       ¦   Console App.AssemblyInfoInputs.cache
+¦           ¦       ¦   Console App.assets.cache
+¦           ¦       ¦   Console App.csproj.BuildWithSkipAnalyzers
+¦           ¦       ¦   Console App.csproj.CoreCompileInputs.cache
+¦           ¦       ¦   Console App.csproj.FileListAbsolute.txt
+¦           ¦       ¦   Console App.dll
+¦           ¦       ¦   Console App.GeneratedMSBuildEditorConfig.editorconfig
+¦           ¦       ¦   Console App.genruntimeconfig.cache
+¦           ¦       ¦   Console App.GlobalUsings.g.cs
+¦           ¦       ¦   Console App.pdb
+¦           ¦       ¦   
+¦           ¦       +---ref
+¦           ¦       ¦       Console App.dll
+¦           ¦       ¦       
+¦           ¦       L---refint
+¦           ¦               Console App.dll
+¦           ¦               
+¦           L---Release
+¦               L---net8.0
+¦                       .NETCoreApp,Version=v8.0.AssemblyAttributes.cs
+¦                       Console App.AssemblyInfo.cs
+¦                       Console App.AssemblyInfoInputs.cache
+¦                       Console App.assets.cache
+¦                       Console App.GeneratedMSBuildEditorConfig.editorconfig
+¦                       Console App.GlobalUsings.g.cs
+¦                       
++---dist
+¦       app.exe
+¦       
++---static
+¦   L---uploads
+¦           2024-11-27_170505.png
+¦           78d351b0c36af47477ac05f532319f26.jpg
+¦           docx
+¦           Proksi-servery-i-kontent-filtry-Zashita-i-kontrol-internet-trafika.pptx
+¦           v2.docx
+¦           
+L---templates
+        calendar.html
+        day_assignments.html
+        edit_assignment.html
+        index.html
+        login.html
+        register.html
+        student_dashboard.html
+        teacher_dashboard.html
+        user.html
+        userwhite.png
+        

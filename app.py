@@ -6,7 +6,7 @@ import calendar
 from datetime import datetime
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
-
+import uuid
 
 
 app = Flask(__name__, static_folder='templates')
@@ -14,8 +14,9 @@ app.secret_key = 'your_secret_key'
 
 
 UPLOAD_FOLDER = os.path.join(app.root_path, 'static', 'uploads')
+
 ALLOWED_EXTENSIONS = {
-    'txt', 'pdf', 'jpg', 'png', 'jpeg', 'gif',       # НЕТ
+    'txt', 'pdf', 'jpg', 'png', 'jpeg', 'gif',
     'doc', 'docx',                                    
     'ppt', 'pptx',                                    
     'xls', 'xlsx',                                    
@@ -287,7 +288,7 @@ def day_view(date):
             file_path = None
 
             if student_file and student_file.filename:
-                filename = secure_filename(student_file.filename)
+                filename = str(uuid.uuid4()) + "_" + secure_filename(student_file.filename)
                 file_path = filename
                 student_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 
