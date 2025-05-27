@@ -26,3 +26,11 @@ C:\Users\egorc\OneDrive\Рабочий стол\Cursovaya\Console App\Console Ap
 C:\Users\egorc\OneDrive\Рабочий стол\Cursovaya\Console App\Console App\obj\Debug\net8.0\Console App.pdb
 C:\Users\egorc\OneDrive\Рабочий стол\Cursovaya\Console App\Console App\obj\Debug\net8.0\Console App.genruntimeconfig.cache
 C:\Users\egorc\OneDrive\Рабочий стол\Cursovaya\Console App\Console App\obj\Debug\net8.0\ref\Console App.dll
+C:\Users\egorc\OneDrive\Рабочий стол\Cursovaya\homework-tracker\Console App\Console App\obj\Debug\net8.0\Console App.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\egorc\OneDrive\Рабочий стол\Cursovaya\homework-tracker\Console App\Console App\obj\Debug\net8.0\Console App.AssemblyInfoInputs.cache
+C:\Users\egorc\OneDrive\Рабочий стол\Cursovaya\homework-tracker\Console App\Console App\obj\Debug\net8.0\Console App.AssemblyInfo.cs
+C:\Users\egorc\OneDrive\Рабочий стол\Cursovaya\homework-tracker\Console App\Console App\obj\Debug\net8.0\Console App.csproj.CoreCompileInputs.cache
+C:\Users\egorc\OneDrive\Рабочий стол\Cursovaya\homework-tracker\Console App\Console App\obj\Debug\net8.0\Console App.sourcelink.json
+C:\Users\egorc\OneDrive\Рабочий стол\Cursovaya\homework-tracker\Console App\Console App\obj\Debug\net8.0\Console App.dll
+C:\Users\egorc\OneDrive\Рабочий стол\Cursovaya\homework-tracker\Console App\Console App\obj\Debug\net8.0\refint\Console App.dll
+C:\Users\egorc\OneDrive\Рабочий стол\Cursovaya\homework-tracker\Console App\Console App\obj\Debug\net8.0\Console App.pdb
