@@ -317,10 +317,12 @@ def day_view(date):
             return redirect(url_for('day_view', date=date))
 
 
-    db.execute('SELECT * FROM assignments WHERE date = ?', (date,))
+    if role == 'teacher':
+        db.execute('SELECT * FROM assignments WHERE date = ? AND teacher_id = ?', (date, session['user_id']))
+    else:
+        db.execute('SELECT * FROM assignments WHERE date = ?', (date,))
     assignments = db.fetchall()
 
- 
     if role == 'teacher':
         student_id = request.args.get('student_id')
     else:
@@ -392,6 +394,30 @@ def delete_assignment(assignment_id):
     conn.commit()
     conn.close()
     return redirect(request.referrer or url_for('teacher_dashboard'))
+
+@app.route('/delete_submission/<int:assignment_id>', methods=['POST'])
+def delete_submission(assignment_id):
+    student_id = session.get('user_id')
+    if not student_id:
+        return redirect(url_for('login'))
+
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
+
+    cursor.execute('SELECT file_path FROM submissions WHERE assignment_id = ? AND student_id = ?', (assignment_id, student_id))
+    result = cursor.fetchone()
+    if result and result[0]:  # result[0] вместо result['file_path']
+        try:
+            os.remove(os.path.join('uploads', result[0]))
+        except FileNotFoundError:
+            pass
+
+    # Удаляем запись из таблиц submissions и grades
+    cursor.execute('DELETE FROM submissions WHERE assignment_id = ? AND student_id = ?', (assignment_id, student_id))
+    cursor.execute('DELETE FROM grades WHERE assignment_id = ? AND student_id = ?', (assignment_id, student_id))
+    conn.commit()
+    conn.close()
+    return redirect(request.referrer or url_for('student_dashboard'))
 
 
 

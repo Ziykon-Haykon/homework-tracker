@@ -377,7 +377,6 @@
   <div class="assignment-card">
     <p><strong>📘 Задание:</strong> {{ a['content'] }}</p>
 
-    <!-- 📎 Файл от учителя -->
     {% if a['file_path'] %}
     <div class="file-block">
       <p><strong>📎 Файл учителя:</strong></p>
@@ -385,17 +384,24 @@
     </div>
     {% endif %}
 
-    <!-- 👨‍🎓 Студент -->
     {% if role == 'student' %}
       {% if a['submission'] %}
-        <p style="color: green;">✅ Вы сдали это задание.</p>
+        {% if a['submission']['grade'] %}
+          <p style="color: green;">✅ Задание сдано и оценено: <strong>{{ a['submission']['grade'] }}</strong></p>
+        {% else %}
+          <p style="color: orange;">🟡 Задание сдано, но ещё не оценено</p>
+        {% endif %}
 
         {% if a['submission']['file_path'] %}
-        <div class="file-block">
-          <p><strong>📄 Ваша работа:</strong></p>
-          <a href="{{ url_for('uploaded_file', filename=a['submission']['file_path']) }}" class="download-button" download>⬇️ Скачать вашу работу</a>
-        </div>
+          <div class="file-block">
+            <p><strong>📄 Ваша работа:</strong></p>
+            <a href="{{ url_for('uploaded_file', filename=a['submission']['file_path']) }}" class="download-button" download>⬇️ Скачать</a>
+          </div>
         {% endif %}
+
+        <form method="POST" action="{{ url_for('delete_submission', assignment_id=a['id']) }}">
+          <button type="submit" class="delete-button" onclick="return confirm('Удалить вашу отправку?')">🗑 Удалить и пересдать</button>
+        </form>
       {% else %}
         <p style="color: red;">❌ Вы ещё не сдали это задание.</p>
         <form method="POST" enctype="multipart/form-data" class="assignment-form">
@@ -407,17 +413,16 @@
       {% endif %}
     {% endif %}
 
-    <!-- 👩‍🏫 Учитель -->
     {% if role == 'teacher' %}
       {% if a['submission'] %}
         {% if a['submission']['file_path'] %}
-        <div class="file-block">
-          <p><strong>📄 Работа ученика:</strong></p>
-          <a href="{{ url_for('uploaded_file', filename=a['submission']['file_path']) }}" class="download-button" download>⬇️ Скачать файл ученика</a>
-        </div>
+          <div class="file-block">
+            <p><strong>📄 Работа ученика:</strong></p>
+            <a href="{{ url_for('uploaded_file', filename=a['submission']['file_path']) }}" class="download-button" download>⬇️ Скачать файл ученика</a>
+          </div>
         {% endif %}
         {% if a['submission']['comment'] %}
-        <p><strong>💬 Комментарий ученика:</strong> {{ a['submission']['comment'] }}</p>
+          <p><strong>💬 Комментарий ученика:</strong> {{ a['submission']['comment'] }}</p>
         {% endif %}
 
         {% if a['submission']['grade'] %}
@@ -434,7 +439,6 @@
         <p style="color: darkred;">❌ Студент не сдал задание.</p>
       {% endif %}
 
-      <!-- Кнопка удаления -->
       <form method="POST" action="{{ url_for('delete_assignment', assignment_id=a['id']) }}" style="display:inline;">
         <button type="submit" class="delete-button" onclick="return confirm('Удалить это задание?')">🗑 Удалить</button>
       </form>
@@ -442,6 +446,7 @@
   </div>
   {% endfor %}
 </div>
+
 
 
                 
