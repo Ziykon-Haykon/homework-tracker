@@ -13,7 +13,8 @@ namespace HomeworkTrackerLauncher
             Console.Title = "Homework Tracker Launcher by Макар & Мансур";
             Console.ForegroundColor = ConsoleColor.Cyan;
             Console.WriteLine(" Инициализация системы...");
-            Thread.Sleep(1000);S
+            Thread.Sleep(1000);
+
             InitializeModules();
             CheckNetworkPort(5000);
             LogEnvironmentInfo();
@@ -97,3 +98,12 @@ namespace HomeworkTrackerLauncher
         }
     }
 }
+
+            <div class="subject-card">
+                <h3>@grade.Subject</h3>
+                <p>Средняя оценка: <strong>@grade.AverageGrade.ToString("F1")</strong></p>
+                <p>Завершено: @grade.Completed из @grade.Total</p>
+
+                <div class="progress-container">
+                    <div class="progress-bar" style="width:@(grade.Completed * 100 / grade.Total)%"></div>
+                </div>

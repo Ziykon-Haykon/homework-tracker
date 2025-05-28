@@ -416,6 +416,9 @@
           <a href="{{ url_for('uploaded_file', filename=a['submission']['file_path']) }}" class="download-button" download>⬇️ Скачать файл ученика</a>
         </div>
         {% endif %}
+        {% if a['submission']['comment'] %}
+        <p><strong>💬 Комментарий ученика:</strong> {{ a['submission']['comment'] }}</p>
+        {% endif %}
 
         {% if a['submission']['grade'] %}
           <p>Оценка: {{ a['submission']['grade'] }}</p>

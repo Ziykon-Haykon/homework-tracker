@@ -185,41 +185,56 @@ def student_dashboard():
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
-
+    # Получаем ВСЕ задания за месяц
     cursor.execute("""
-        SELECT date 
-        FROM assignments 
+        SELECT id, date FROM assignments 
         WHERE strftime('%Y-%m', date) = ?
     """, (f"{year}-{month:02d}",))
-    assignment_dates = {row['date'] for row in cursor.fetchall()}
+    assignments = cursor.fetchall()
 
-
+    # Получаем ВСЕ отправки ученика за месяц
     cursor.execute("""
-        SELECT date 
-        FROM submissions 
-        WHERE student_id = ? AND strftime('%Y-%m', date) = ?
+        SELECT submissions.assignment_id, grades.grade
+        FROM submissions
+        LEFT JOIN grades 
+            ON submissions.assignment_id = grades.assignment_id 
+            AND submissions.student_id = grades.student_id
+        WHERE submissions.student_id = ? AND strftime('%Y-%m', submissions.date) = ?
     """, (user_id, f"{year}-{month:02d}"))
-    submission_dates = {row['date'] for row in cursor.fetchall()}
+    submissions = cursor.fetchall()
 
 
-    assignment_status_by_date = {}
-    for date in assignment_dates:
-        if date in submission_dates:
-            assignment_status_by_date[date] = 'completed'
+    # Преобразуем отправки в словарь: assignment_id → grade
+    submission_grades = {row['assignment_id']: row['grade'] for row in submissions}
+    assignment_status_by_date = {}  
+    # Теперь по каждой дате решаем статус
+    for row in assignments:
+        aid = row['id']
+        date = row['date']
+        grade = submission_grades.get(aid)
+
+        if grade is not None:
+            new_status = 'completed'
+        elif aid in submission_grades:
+            new_status = 'pending'
         else:
-            assignment_status_by_date[date] = 'not_completed'
+            new_status = 'not_completed'
 
+        print(f"{date} - assignment {aid}: grade={grade}, status={new_status}")
 
+        current_status = assignment_status_by_date.get(date)
+        priority = {'completed': 3, 'pending': 2, 'not_completed': 1}
+        if not current_status or priority[new_status] > priority.get(current_status, 0):
+            assignment_status_by_date[date] = new_status
+
+    print("Final status by date:", assignment_status_by_date)
+
+    # Календарь
     cal = calendar.Calendar()
     calendar_weeks = list(cal.itermonthdates(year, month))
     weeks = [calendar_weeks[i:i+7] for i in range(0, len(calendar_weeks), 7)]
 
-    
- 
-    weeks = [calendar_weeks[i:i+7] for i in range(0, len(calendar_weeks), 7)]
-
     conn.close()
-    print(assignment_status_by_date)
 
     return render_template(
         'student_dashboard.html',
@@ -228,6 +243,7 @@ def student_dashboard():
         assignment_status_by_date=assignment_status_by_date,
         calendar_weeks=weeks
     )
+
 
 
 

@@ -89,10 +89,18 @@
     border-radius: 10px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
-    .bg-green-300 { background-color: #86efac; }
-    .bg-red-300 { background-color: #fca5a5; }
-    .bg-white { background-color: #ffffff; }
-
+  .bg-green-300 { background-color: #86efac !important; }
+  .bg-red-300 { background-color: #fca5a5 !important; }
+  .bg-white { background-color: #ffffff !important; }
+  .bg-yellow-300 { background-color: #fde68a !important; }
+  td {
+    padding: 5px;
+    border: 1px solid #ccc;
+    text-align: center;
+  }
+  table {
+    border-collapse: collapse;
+  }
     </style>
 </head>
 <body>
@@ -109,26 +117,33 @@
         <div class="calendar-weekdays">
             <div>Пн</div><div>Вт</div><div>Ср</div><div>Чт</div><div>Пт</div><div>Сб</div><div>Вс</div>
         </div>
-        <table id="calendar" class="calendar">
-            {% for week in calendar_weeks %}
-            <tr>
-                {% for day in week %}
-                {% set date_str = day.strftime('%Y-%m-%d') %}
-                {% set status = assignment_status_by_date.get(date_str) %}
-                <td class="
-                            {% if status == 'completed' %}bg-green-300
-                            {% elif status == 'not_completed' %}bg-red-300
-                            {% else %}bg-white
-                            {% endif %}
-                        ">
-                    {{ day.day }}
-                </td>
-                {% endfor %}
-            </tr>
-            {% endfor %}
-        </table>
         
-        
+<table id="calendar" class="calendar">
+  {% for week in calendar_weeks %}
+  <tr>
+    {% for day in week %}
+    {% set date_str = day.strftime('%Y-%m-%d') %}
+    {% set status = assignment_status_by_date.get(date_str) %}
+    <td class="
+      {% if status == 'completed' %}
+        bg-green-300
+      {% elif status == 'pending' %}
+        bg-yellow-300
+      {% elif status == 'not_completed' %}
+        bg-red-300
+      {% else %}
+        bg-white
+      {% endif %}
+    ">
+      {{ day.day }}
+    </td>
+    {% endfor %}
+  </tr>
+  {% endfor %}
+</table>
+
+
+
     </div>
     
                 
@@ -176,6 +191,8 @@
                 const status = assignmentStatusByDate[dateStr];
                 if (status === 'completed') {
                     day.classList.add('bg-green-300');
+                } else if (status === 'pending') {
+                    day.classList.add('bg-yellow-300');
                 } else if (status === 'not_completed') {
                     day.classList.add('bg-red-300');
                 } else {
